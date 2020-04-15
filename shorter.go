@@ -337,7 +337,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		switch requestType {
 		case "url":
 			formURL := r.Form.Get("url")
-			// TODO: where does the 10 come from in len(formURL) < 10? consider using e.g. len("ftp://x.se") or something instead of magic number. Perhaps document why we do this check? Is it to prevent recursion? Is to to only handle valid links to other pages?
+			// simple sanity check to fail early, If len(formURL) is less than 11 it is definitely an invalid url.
 			if len(formURL) < 10 || !strings.HasPrefix(formURL, "http://") && !strings.HasPrefix(formURL, "https://") {
 				http.Error(w, "Invalid url, only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError)
 				return
