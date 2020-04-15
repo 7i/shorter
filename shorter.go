@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,20 +20,26 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// charset consists of alphanumeric characters with some characters removed due to them being to similar in some fonts.
-const charset = "abcdefghijkmnopqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
-const mutationsLen1 = len(charset)
-const mutationsLen2 = len(charset) * len(charset)
-const mutationsLen3 = len(charset) * len(charset) * len(charset)
+const (
+	// charset consists of alphanumeric characters with some characters removed due to them being to similar in some fonts.
+	charset       = "abcdefghijkmnopqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+	mutationsLen1 = len(charset)
+	mutationsLen2 = len(charset) * len(charset)
+	mutationsLen3 = len(charset) * len(charset) * len(charset)
+)
+
 const debug = true
 
-// Config contains all valid fealds from a shorter config file
+// dateFormat specifies the format in which date and time is represented.
+const dateFormat = "Mon 2006-01-02 15:04 MST"
+
+// Config contains all valid fields from a shorter config file
 type Config struct {
 	// TemplateDir should point to the directory containing the template files for shorter
 	TemplateDir string `yaml:"TemplateDir"`
 	// UploadDir should point to the directory to save temporary files and textblobs
 	UploadDir string `yaml:"UploadDir"`
-	// DomainName should be the domain name of the instance of shorter, eg. 7i.se
+	// DomainName should be the domain name of the instance of shorter, e.g. 7i.se
 	DomainName string `yaml:"DomainName"`
 	// Clear1Duration should specify the time between clearing old 1 character long URLs.
 	// The syntax is 1h20m30s for 1hour 20minutes and 30 seconds
@@ -44,7 +50,7 @@ type Config struct {
 	Clear3Duration time.Duration `yaml:"Clear3Duration"`
 	// MaxFileSize specifies the maximum filesize when uploading temporary files
 	MaxFileSize int64 `yaml:"MaxFileSize"`
-	// MaxDiskUsage specifies how much space in total shorter is allowd to save ondisk
+	// MaxDiskUsage specifies how much space in total shorter is allowed to save ondisk
 	MaxDiskUsage int64 `yaml:"MaxDiskUsage"`
 	// LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 	LinkAccessMaxNr int `yaml:"LinkAccessMaxNr"`
@@ -69,9 +75,9 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		log.Println("Starting to Add link:\n", lnk)
 		log.Println("len(l.freeMap):", len(l.freeMap))
 		if l.endClear != nil {
-			log.Println("lnk.timeout:", lnk.timeout.Format("Mon 2006-01-02 15:04 MST"), "l.endClear.timeout:", l.endClear.timeout.Format("Mon 2006-01-02 15:04 MST"))
+			log.Println("lnk.timeout:", lnk.timeout.Format(dateFormat), "l.endClear.timeout:", l.endClear.timeout.Format(dateFormat))
 		} else {
-			log.Println("lnk.timeout:", lnk.timeout.Format("Mon 2006-01-02 15:04 MST"), "l.endClear is nil, will set it to lnk if no other errors occure")
+			log.Println("lnk.timeout:", lnk.timeout.Format(dateFormat), "l.endClear is nil, will set it to lnk if no other errors occur")
 		}
 	}
 
@@ -81,7 +87,7 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 	if len(l.freeMap) == 0 {
 		return "", errors.New("no keys available at this time")
 	}
-	if time.Now().Sub(lnk.timeout) > 0 {
+	if time.Since(lnk.timeout) > 0 {
 		return "", errors.New("invalid link, timeout has to be in the future")
 	}
 	for key = range l.freeMap {
@@ -124,7 +130,7 @@ func (l *linkLen) TimeoutHandler() {
 	ticker := time.NewTicker(time.Second)
 	for {
 		<-ticker.C // check if it is time to clear the next link
-		if l.nextClear != nil && time.Now().Sub(l.nextClear.timeout) > 0 {
+		if l.nextClear != nil && time.Since(l.nextClear.timeout) > 0 {
 			// Time to clear next link
 			l.mutex.Lock()
 			keyToClear := l.nextClear.key
@@ -152,6 +158,7 @@ func (l *linkLen) TimeoutHandler() {
 	}
 }
 
+// link tracks the contents and lifetime of a link.
 type link struct {
 	key       string
 	linkType  string
@@ -163,30 +170,39 @@ type link struct {
 
 // Server config variable
 var config Config
-var linkLen1 linkLen
-var linkLen2 linkLen
-var linkLen3 linkLen
+
+var (
+	linkLen1 linkLen
+	linkLen2 linkLen
+	linkLen3 linkLen
+)
 
 func main() {
-	// Populate config variable
-	pathPtr := flag.String("config", ".", "path to the config file")
+	// Parse command line arguments.
+	var (
+		// address to listen on.
+		addr string
+		// path to config directory.
+		confDir string
+	)
+	flag.StringVar(&addr, "addr", "127.0.0.1:8080", "address to listen on")
+	flag.StringVar(&confDir, "config", ".", "path to the config directory")
 	flag.Parse()
-	conf, err := ioutil.ReadFile(*pathPtr + string(os.PathSeparator) + "config")
+	conf, err := ioutil.ReadFile(filepath.Join(confDir, "config"))
 	if err != nil {
 		log.Fatalln("Invalid config file:\n", err)
 	}
 	var readOps uint64
 	atomic.AddUint64(&readOps, 1)
-	yaml.UnmarshalStrict(conf, &config)
+	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
+		log.Fatalln("Unable to parse config file:\n", err)
+	}
 	if debug {
 		log.Println("config:\n", config)
 	}
 
 	//  Create index page
-	indexTmpl := template.Must(template.ParseFiles(config.TemplateDir + string(os.PathSeparator) + "index.tmpl"))
-	if err != nil {
-		log.Fatalln("invalid template or template directory\n", err)
-	}
+	indexTmpl := template.Must(template.ParseFiles(filepath.Join(config.TemplateDir, "index.tmpl")))
 
 	// init linkLen1, linkLen2, linkLen3 and fill each freeMap with all valid keys for each len
 	initLinkLens()
@@ -206,7 +222,7 @@ func main() {
 	if debug {
 		log.Println("Starting server")
 	}
-	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 // initMaps will init and fill linkLen1, linkLen2 and linkLen3 with all valid free keys for each of them
@@ -284,6 +300,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 	if r.Method == http.MethodPost {
 		err := r.ParseMultipartForm(config.MaxFileSize)
 		if err != nil {
+			// TODO: all logs should be logged to disk
 			http.Error(w, "Unexpected server error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -320,7 +337,8 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		switch requestType {
 		case "url":
 			formURL := r.Form.Get("url")
-			if len(formURL) < 10 || formURL[:7] != "http://" && formURL[:8] != "https://" {
+			// simple sanity check to fail early, If len(formURL) is less than 11 it is definitely an invalid url.
+			if len(formURL) < 11 || !strings.HasPrefix(formURL, "http://") && !strings.HasPrefix(formURL, "https://") {
 				http.Error(w, "Invalid url, only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError)
 				return
 			}
@@ -332,9 +350,10 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			newLink := &link{linkType: "url", data: formURL, times: xTimes, timeout: time.Now().Add(currentLinkLen.timeout)}
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
+				// TODO: log all errors to disk and only return generic static errors to users e.g. ErrNoKeysLeft, ErrTimeout, etc.
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			fmt.Fprint(w, config.DomainName+"/"+key+"/ now pointing to "+html.EscapeString(formURL)+" \nThis link will be removed "+newLink.timeout.UTC().Format("Mon 2006-01-02 15:04 MST")+" ("+currentLinkLen.timeout.String()+" from now)")
+			fmt.Fprint(w, config.DomainName+"/"+key+"/ now pointing to "+html.EscapeString(formURL)+" \nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLen.timeout.String()+" from now)")
 		case "text":
 			fmt.Fprint(w, "Not implemented")
 		case "file":
