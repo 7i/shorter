@@ -1,10 +1,10 @@
 # Path to template directory for the shorter service
-TemplateDir: "/home/imp/Desktop/go/src/github.com/7i/shorter"
+TemplateDir: "/path/to/template/directory"
 # Path to directory to save temporary files and textblobs
-UploadDir: "/home/imp/Desktop/go/src/github.com/7i/shorter/upload"
+UploadDir: "/path/to/upload/directory"
 # Domainname for the shorter service
 DomainName: "http://7i.se"
-# Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 3 characters
+# Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
 Clear1Duration: "10m"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 2 characters
 Clear2Duration: "1h"
