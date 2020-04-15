@@ -1,0 +1,18 @@
+# Path to template directory for the shorter service
+TemplateDir: "/home/imp/Desktop/go/src/github.com/7i/shorter"
+# Path to directory to save temporary files and textblobs
+UploadDir: "/home/imp/Desktop/go/src/github.com/7i/shorter/upload"
+# Domainname for the shorter service
+DomainName: "http://7i.se"
+# Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 3 characters
+Clear1Duration: "10m"
+# Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 2 characters
+Clear2Duration: "1h"
+# Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 3 characters
+Clear3Duration:  "720h"
+# Max filesize when uploading temporary files
+MaxFileSize: 4000000000 # 4GB
+# Maximum disk usage that shorter is allowd to use
+MaxDiskUsage: 1000000000000 # 1TB
+# LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
+LinkAccessMaxNr: 100000
