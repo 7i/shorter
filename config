@@ -2,8 +2,12 @@
 TemplateDir: "/path/to/template/directory"
 # Path to directory to save temporary files and textblobs
 UploadDir: "/path/to/upload/directory"
+# Logfile specifies the file to write logs to, if empty or missing, no logging will be done
+Logfile: "/path/to/logfile"
 # Domainname for the shorter service
 DomainName: "http://7i.se"
+# AddressPort specifies the adress and port the shorter service should listen on
+AddressPort: "127.0.0.1:8080"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
 Clear1Duration: "10m"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 2 characters

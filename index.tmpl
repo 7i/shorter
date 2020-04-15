@@ -48,13 +48,14 @@ function RandomPassword() {
 // File upload should make a sha256 hash of the file and prefix the file data with that as a sanity check.
 // For security Encrypt-then-Mac HMAC-SHA256
 var rndpass = RandomPassword();
-alert(rndpass);
-var data = "raw text";
-alert(data);
-var encrypted = CryptoJS.AES.encrypt(data, rndpass);
-alert(encrypted);
-var decrypted = CryptoJS.AES.decrypt(encrypted, rndpass);
-alert(CryptoJS.enc.Utf8.stringify(decrypted));
+
+//var decrypted = CryptoJS.AES.decrypt(encrypted, rndpass);
+// alert(CryptoJS.enc.Utf8.stringify(decrypted));
+
+var stateNames = {};
+stateNames[FileReader.EMPTY]   = 'EMPTY';
+stateNames[FileReader.LOADING] = 'LOADING';
+stateNames[FileReader.DONE]    = 'DONE';
 
 // Check File API support.
 if (window.File && window.FileReader && window.FileList) {
@@ -62,18 +63,24 @@ if (window.File && window.FileReader && window.FileList) {
    alert('File APIs are not fully supported');
 }
 
-function handleFile(evt) {
-   var files = evt.target.files; // FileList object
+   var loadFile = function (event) {
+      var input = event.target;
+      var reader = new FileReader();
+      reader.onload = function(e){
+         console.log('After load: ' + stateNames[reader.readyState]);
+         console.log(e.target.result);
+         var encrypted = CryptoJS.AES.encrypt(CryptoJS.enc.Latin1.parse(e.target.result), rndpass);
+         alert(encrypted);
+         var decrypted = CryptoJS.AES.decrypt(encrypted, rndpass);
+         // TODO Fix this so we can test a correct decryption
+         alert(decrypted);
+         alert(CryptoJS.enc.Latin1.stringify(decrypted));
+      };
+      console.log('Before read: ' + stateNames[reader.readyState]);
+      reader.readAsArrayBuffer(input.files[0]);
+      console.log('After read: ' + stateNames[reader.readyState]);
 
-   var output = [];
-
-   output.push('<strong>', escape(files[0].name), '</strong>');
-   document.getElementById('fileNameLable').innerHTML = output.join('');
 }
-
-document.getElementById('file').addEventListener('change', handleFile, false);
-
-
       </script>
 
 
@@ -98,9 +105,7 @@ document.getElementById('file').addEventListener('change', handleFile, false);
          </div>
          <div id="fileDiv">
             Uppload encrypted temporary file: <br />
-            <input type="file" name="file">
-
-            <output id="fileNameLable"></output>
+            <input type="file" id="file" name="file" onchange="loadFile(event)">
             <br>
             <br>
          </div>
