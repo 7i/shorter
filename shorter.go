@@ -338,7 +338,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		case "url":
 			formURL := r.Form.Get("url")
 			// simple sanity check to fail early, If len(formURL) is less than 11 it is definitely an invalid url.
-			if len(formURL) < 10 || !strings.HasPrefix(formURL, "http://") && !strings.HasPrefix(formURL, "https://") {
+			if len(formURL) < 11 || !strings.HasPrefix(formURL, "http://") && !strings.HasPrefix(formURL, "https://") {
 				http.Error(w, "Invalid url, only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError)
 				return
 			}
