@@ -1,6 +1,11 @@
 # shorter
 URL shortener with pastebin and file upload functions
 
+
+## WIP
+
+This project is a *work in progress*. The implementation is *incomplete* and subject to change.
+
 If you want to try to run shorter, please set your correct values in the config before starting the server.
 
 ## Installation
