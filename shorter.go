@@ -350,7 +350,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			newLink := &link{linkType: "url", data: formURL, times: xTimes, timeout: time.Now().Add(currentLinkLen.timeout)}
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
-				// NOTE: as all errors of Add are controlled by us, this is not an information disclosure. However, it could become if e.g. file handling was added to the Add method, and we return an error from the os. To limit this risk, we could define specific errors that are intended for the user, e.g. ErrNoKeysLeft, ErrTimeout, etc. Each of these would have static error messages. Then for any other error we just log to disk, and return internal server error to the user.
+				// TODO: log all errors to disk and only return generic static errors to users e.g. ErrNoKeysLeft, ErrTimeout, etc.
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			fmt.Fprint(w, config.DomainName+"/"+key+"/ now pointing to "+html.EscapeString(formURL)+" \nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLen.timeout.String()+" from now)")
