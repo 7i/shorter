@@ -300,7 +300,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 	if r.Method == http.MethodPost {
 		err := r.ParseMultipartForm(config.MaxFileSize)
 		if err != nil {
-			// TODO: consider logging error to disk, and only output static error message to use. This is to prevent information disclosure.
+			// TODO: all logs should be logged to disk
 			http.Error(w, "Unexpected server error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
