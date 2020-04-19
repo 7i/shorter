@@ -8,6 +8,8 @@ This project is a *work in progress*. The implementation is *incomplete* and sub
 
 If you want to try to run shorter, please set your correct values in the config before starting the server.
 
+Shortened links on the pre alpha version test site 7i.se will be cleared from time to time during testing without notice.
+
 ## Installation
 
 ```bash
