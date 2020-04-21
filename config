@@ -1,7 +1,9 @@
-# Path to template directory for the shorter service
+# TemplateDir specifies the path to the template directory for the shorter service
 TemplateDir: "/path/to/template/directory"
-# Path to directory to save temporary files and textblobs
+# UploadDir specifies the path to the directory that shorter will save temporary files and textblobs to
 UploadDir: "/path/to/upload/directory"
+# BackupDBDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
+BackupDBDir: "/path/to/backup/directory"
 # Logfile specifies the file to write logs to, if empty or missing, no logging will be done
 Logfile: "/path/to/logfile"
 # Domainname for the shorter service
