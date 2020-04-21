@@ -1,4 +1,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/7i/shorter)](https://goreportcard.com/report/github.com/7i/shorter)
+![Linux](https://img.shields.io/badge/Supports-Linux-green.svg)
+![windows](https://img.shields.io/badge/Supports-windows-green.svg)
+[![License](https://img.shields.io/badge/License-UNLICENSE-blue.svg)](https://raw.githubusercontent.com/7i/shorter/master/UNLICENSE)
+[![License](https://img.shields.io/badge/License-0BSD-blue.svg)](https://raw.githubusercontent.com/7i/shorter/master/LICENSE)
 # shorter
 URL shortener with pastebin and file upload functions
 
