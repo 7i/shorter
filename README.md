@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/7i/shorter)](https://goreportcard.com/report/github.com/7i/shorter)
 # shorter
 URL shortener with pastebin and file upload functions
 
