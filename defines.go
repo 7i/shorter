@@ -8,7 +8,7 @@ const (
 	charset = "abcdefghijkmnopqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 	// dateFormat specifies the format in which date and time is represented.
 	dateFormat = "Mon 2006-01-02 15:04 MST"
-	// logSep sets the seperator between log entrys in the log file, only used for aesthetics purposes, do not rely on this if doing log parsing
+	// logSep sets the separator between log entrys in the log file, only used for aesthetics purposes, do not rely on this if doing log parsing
 	logSep = "\n---\n"
 	// errServerError contains the generic error message users will se when somthing goes wrong
 	errServerError = "Unexpected server error"
