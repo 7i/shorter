@@ -20,7 +20,7 @@ type Config struct {
 	Logfile string `yaml:"Logfile"`
 	// DomainName should be the domain name of the instance of shorter, e.g. 7i.se
 	DomainName string `yaml:"DomainName"`
-	// AddressPort specifies the adress and port the shorter service should listen on
+	// AddressPort specifies the address and port the shorter service should listen on
 	AddressPort string `yaml:"AddressPort"`
 	// Clear1Duration should specify the time between clearing old 1 character long URLs.
 	// The syntax is 1h20m30s for 1hour 20minutes and 30 seconds
