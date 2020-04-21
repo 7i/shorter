@@ -24,7 +24,7 @@ shorter /path/to/config
 - [x] Implement shortening of URLs
    - [x] 1 char long - 10min timeout
    - [x] 2 chars long - 1h timeout
-   - [x] 3 chars long - 1month timeout
+   - [x] 3 chars long - 30days timeout
    - [x] make timeouts configurable
 - [x] Add config file that specifies relevant options
 - [ ] Pastebin functionality with same timeouts as above
@@ -36,6 +36,10 @@ shorter /path/to/config
 - [ ] Add support for subdomains with diffrent configs e.g. d1.7i.se
    - [ ] Add password/client cert protected subdomain management e.g. d1.7i.se/admin
    - [ ] Let the user managing a subdomain specify generic links and set timeouts, including "no timeout" for the shortened links, text-blobs and files.
+- [ ] Enable CSP
+   - [ ] Move all js and css to seperate files and modify html/template files to use these
+   - [ ] Setup a CSP report collector
+   - [ ] setup nonce for all scripts and css files
 
 
 ## License
