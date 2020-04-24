@@ -30,7 +30,7 @@ shorter /path/to/config
 ## TODO
 - [x] Implement shortening of URLs
    - [x] 1 char long - 10min timeout
-   - [x] 2 chars long - 1h timeout
+   - [x] 2 chars long - 12h timeout
    - [x] 3 chars long - 30days timeout
    - [x] make timeouts configurable
 - [x] Add config file that specifies relevant options
