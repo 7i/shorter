@@ -99,7 +99,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			}
 		}
 
-		// Handle diffrent request types
+		// Handle different request types
 		requestType := r.Form.Get("requestType")
 		switch requestType {
 		case "url":
@@ -120,7 +120,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			newLink := &link{linkType: "url", data: formURL, times: xTimes, timeout: time.Now().Add(currentLinkLenTimeout)}
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
-				// if logging is enabled then logs have allready been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
+				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}

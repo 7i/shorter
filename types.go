@@ -22,7 +22,7 @@ type Config struct {
 	Logfile string `yaml:"Logfile"`
 	// DomainName should be the domain name of the instance of shorter, e.g. 7i.se
 	DomainName string `yaml:"DomainName"`
-	// AddressPort specifies the adress and port the shorter service should listen on
+	// AddressPort specifies the address and port the shorter service should listen on
 	AddressPort string `yaml:"AddressPort"`
 	// TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
 	TLSAddressPort string `yaml:"TLSAddressPort"`

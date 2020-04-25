@@ -1,3 +1,8 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/7i/shorter)](https://goreportcard.com/report/github.com/7i/shorter)
+![Linux](https://img.shields.io/badge/Supports-Linux-green.svg)
+![windows](https://img.shields.io/badge/Supports-windows-green.svg)
+[![License](https://img.shields.io/badge/License-UNLICENSE-blue.svg)](https://raw.githubusercontent.com/7i/shorter/master/UNLICENSE)
+[![License](https://img.shields.io/badge/License-0BSD-blue.svg)](https://raw.githubusercontent.com/7i/shorter/master/LICENSE)
 # shorter
 URL shortener with pastebin and file upload functions
 
@@ -25,7 +30,7 @@ shorter /path/to/config
 ## TODO
 - [x] Implement shortening of URLs
    - [x] 1 char long - 10min timeout
-   - [x] 2 chars long - 1h timeout
+   - [x] 2 chars long - 12h timeout
    - [x] 3 chars long - 30days timeout
    - [x] make timeouts configurable
 - [x] Add config file that specifies relevant options
