@@ -16,12 +16,16 @@ type Config struct {
 	UploadDir string `yaml:"UploadDir"`
 	// BackupDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
 	BackupDBDir string `yaml:"BackupDBDir"`
+	// CertDir specifies the path to the directory that shorter will use to cache the LetsEnctypt certs
+	CertDir string `yaml:"CertDir"`
 	// Logfile specifies the file to write logs to, if empty or missing, no logging will be done
 	Logfile string `yaml:"Logfile"`
 	// DomainName should be the domain name of the instance of shorter, e.g. 7i.se
 	DomainName string `yaml:"DomainName"`
 	// AddressPort specifies the adress and port the shorter service should listen on
 	AddressPort string `yaml:"AddressPort"`
+	// TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
+	TLSAddressPort string `yaml:"TLSAddressPort"`
 	// Clear1Duration should specify the time between clearing old 1 character long URLs.
 	// The syntax is 1h20m30s for 1hour 20minutes and 30 seconds
 	Clear1Duration time.Duration `yaml:"Clear1Duration"`
@@ -35,6 +39,10 @@ type Config struct {
 	MaxDiskUsage int64 `yaml:"MaxDiskUsage"`
 	// LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 	LinkAccessMaxNr int `yaml:"LinkAccessMaxNr"`
+	// Email optionally specifies a contact email address.
+	// This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
+	// If the Client's account key is already registered, Email is not used.
+	Email string `yaml:"Email"`
 }
 
 // link tracks the contents and lifetime of a link.

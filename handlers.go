@@ -4,12 +4,28 @@ import (
 	"fmt"
 	"html"
 	"html/template"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func handleRoot(mux *http.ServeMux) {
+	//  Create index page
+	indexTmpl := template.Must(template.ParseFiles(filepath.Join(config.TemplateDir, "index.tmpl")))
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL)
+		// Defined in handlers.go
+		addHeaders(w)
+		handleRequests(w, r, indexTmpl)
+	}
+	mux.HandleFunc("/", handler)
+}
 
 // handleRequests will handle all web requests and direct the right action to the right linkLen
 func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.Template) {
@@ -169,4 +185,16 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 	default:
 		http.Error(w, errServerError, http.StatusInternalServerError)
 	}
+}
+
+func handleSJCL(mux *http.ServeMux) {
+	f, err := ioutil.ReadFile(filepath.Join(config.TemplateDir, "sjcl.js"))
+	if err != nil {
+		log.Fatalln("Missing sjcl.js in Template dir")
+	}
+	handlejsfile := func(w http.ResponseWriter, r *http.Request) {
+		addHeaders(w)
+		fmt.Fprintf(w, "%s", f)
+	}
+	mux.HandleFunc("/sjcl.js", handlejsfile)
 }

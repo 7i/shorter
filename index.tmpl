@@ -92,14 +92,16 @@ for (var i = 0; i < buffer.length; i++) {
 }
 var RWPrp = new sjcl.cipher.aes(sjcl.codec.bytes.toBits(new Uint8Array(buffer)));
 var RWEncrypted = sjcl.codec.bytes.fromBits(sjcl.mode.gcm.encrypt(RWPrp, sjcl.codec.bytes.toBits(databytes), sjcl.codec.bytes.toBits(iv)));
+console.log(RWEncrypted.bytes);
       </script>
 	</head>
    <body>
-      <h1>Temp Url shortener - pre Alpha test site, links will be cleard during development without notice. </h1>
+      <h1>Temp Url shortener</h1>
+      <h3>Pre Alpha test site, links will be cleard during development without notice.</h3>
       <form id="shortener" method="POST" enctype="multipart/form-data">
-         <input type="radio" name="len" value="1" checked>Length 1: valid for 10-20min<br/>
-         <input type="radio" name="len" value="2">Length 2: valid for 1-2h<br/>
-         <input type="radio" name="len" value="3">Length 3: valid for 1-2months<br/><br />
+         <input type="radio" name="len" value="1" checked>Length 1: valid for 10min<br/>
+         <input type="radio" name="len" value="2">Length 2: valid for 12h<br/>
+         <input type="radio" name="len" value="3">Length 3: valid for 30days<br/><br />
          <br>
          <input type="radio" name="requestType" id="showURL" value="url" checked>Redirect to temporary URL<br />
          <input type="radio" name="requestType" id="showText" value="text">Temporary text dump<br />

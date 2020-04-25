@@ -4,16 +4,20 @@ TemplateDir: "/path/to/template/directory"
 UploadDir: "/path/to/upload/directory"
 # BackupDBDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
 BackupDBDir: "/path/to/backup/directory"
+# CertDir specifies the path to the directory that shorter will use to cache the LetsEnctypt certs
+CertDir: "/path/to/cert/directory"
 # Logfile specifies the file to write logs to, if empty or missing, no logging will be done
 Logfile: "/path/to/logfile"
 # Domainname for the shorter service
-DomainName: "http://7i.se"
-# AddressPort specifies the adress and port the shorter service should listen on
+DomainName: "example.com"
+# AddressPort specifies the adress and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
 AddressPort: "127.0.0.1:8080"
+# TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
+TLSAddressPort: "127.0.0.1:10443"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
 Clear1Duration: "10m"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 2 characters
-Clear2Duration: "1h"
+Clear2Duration: "12h"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 3 characters
 Clear3Duration:  "720h"
 # Max filesize when uploading temporary files
@@ -22,3 +26,10 @@ MaxFileSize: 4000000000 # 4GB
 MaxDiskUsage: 1000000000000 # 1TB
 # LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 LinkAccessMaxNr: 100000
+
+### OPTIONAL Parameters
+# Email optionally specifies a contact email address.
+# This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
+# If the Client's account key is already registered, Email is not used.
+# Note that this value is ONLY used if UseLetsEncrypt is set to TRUE
+Email: "email@example.com"

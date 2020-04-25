@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"strings"
 	"sync"
 )
@@ -57,4 +58,8 @@ func initLinkLens() {
 	if debug && logger != nil {
 		logger.Println("All maps initialized", logSep)
 	}
+}
+
+func addHeaders(w http.ResponseWriter) {
+	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -58,9 +56,7 @@ func main() {
 	}
 	defer db.Close()
 
-	//  Create index page
-	indexTmpl := template.Must(template.ParseFiles(filepath.Join(config.TemplateDir, "index.tmpl")))
-
+	// Write out server config on startup if logging is enabled
 	if debug && logger != nil {
 		logger.Println("config:\n", config, logSep)
 	}
@@ -75,26 +71,16 @@ func main() {
 	// TODO: find better solution, maybe waitgroup so all TimeoutManager have started before starting the server
 	time.Sleep(time.Millisecond * 200)
 
-	// Handle requests to sjcl.js
-	f, err := ioutil.ReadFile(filepath.Join(config.TemplateDir, "sjcl.js"))
-	if err != nil {
-		log.Fatalln("Missing sjcl.js in Template dir")
-	}
-	handlejsfile := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "%s", f)
-	}
-	http.HandleFunc("/sjcl.js", handlejsfile)
+	mux := http.NewServeMux()
 
-	// Setup handler for web requests
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		// Defined in handlers.go
-		handleRequests(w, r, indexTmpl)
-	}
-	http.HandleFunc("/", handler)
-
+	// Handle requests to /sjcl.js
+	handleSJCL(mux) // defined in handlers.go
+	handleRoot(mux) // defined in handlers.go
 	// Start server
 	if debug && logger != nil {
 		logger.Println("Starting server", logSep)
 	}
-	log.Fatalln(http.ListenAndServe(config.AddressPort, nil))
+	server := getServer(mux)
+	// Using LetsEncrypt, no premade cert and keyfiles needed
+	log.Fatalln(server.ListenAndServeTLS("", ""))
 }
