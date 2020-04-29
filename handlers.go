@@ -19,7 +19,6 @@ func handleRoot(mux *http.ServeMux) {
 	indexTmpl := template.Must(template.ParseFiles(filepath.Join(config.TemplateDir, "index.tmpl")))
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL)
 		// Defined in handlers.go
 		addHeaders(w)
 		handleRequests(w, r, indexTmpl)
@@ -30,7 +29,7 @@ func handleRoot(mux *http.ServeMux) {
 // handleRequests will handle all web requests and direct the right action to the right linkLen
 func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.Template) {
 	if debug && logger != nil {
-		logger.Println("request:\n", r, logSep)
+		logger.Println("request:\n", r.RequestURI, "\n", r, logSep)
 	}
 	if r == nil || indexTmpl == nil {
 		http.Error(w, errServerError, http.StatusInternalServerError)
@@ -125,7 +124,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 				return
 			}
 			// TODO use template to make a better looking output
-			fmt.Fprint(w, config.DomainName+"/"+key+"/ now pointing to "+html.EscapeString(formURL)+" \nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
+			fmt.Fprint(w, "https://"+config.DomainName+"/"+key+"/ now pointing to "+html.EscapeString(formURL)+" \nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
 			return
 		case "text":
 			fmt.Fprint(w, "Not implemented")
@@ -139,7 +138,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		}
 	}
 	// If the request is not handled previously redirect to index
-	http.Redirect(w, r, config.DomainName, http.StatusSeeOther)
+	http.Redirect(w, r, "https://"+config.DomainName, http.StatusSeeOther)
 }
 
 // handleGET will handle GET requests and redirect to the saved link for a key, return a saved textblob or return a file
@@ -194,6 +193,7 @@ func handleSJCL(mux *http.ServeMux) {
 	}
 	handlejsfile := func(w http.ResponseWriter, r *http.Request) {
 		addHeaders(w)
+		w.Header().Add("Content-Type", "text/javascript")
 		fmt.Fprintf(w, "%s", f)
 	}
 	mux.HandleFunc("/sjcl.js", handlejsfile)

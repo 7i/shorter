@@ -1,7 +1,74 @@
-<!DOCTYPE html><html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+   <head>
    <meta charset="utf-8">
    <head>
       <style>
+         @import url('https://fonts.googleapis.com/css2?family=Gentium+Book+Basic:ital@1&display=swap');
+
+         body {
+            font-family: 'Gentium Book Basic', serif;
+            background-color: #f8f8f8  !important;
+         }
+         input[type=text], select {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+         }
+         textarea {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+         }
+         input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+         }
+         .piclen {
+            display: inline-block;
+            float:left;
+            margin-right:30px;
+         }
+         .info {
+            overflow: hidden;
+            background-color: #333;
+            font-size: 17px;
+            padding: 18px 0px 0px 10px;
+            float: left;
+            color: #C00000;
+            display: inline;
+            vertical-align: bottom;
+         }
+         .topnav {
+            overflow: hidden;
+            background-color: #333;
+         }
+         .topnav a {
+            float: left;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 6px 8px;
+            text-decoration: none;
+            font-size: 27px;
+         }
+         .topnav a.active {
+            background-color: #4CAF50;
+            color: white;
+         }
          #urlDiv, #fileDiv, #textDiv {
              display: none;
          }
@@ -11,13 +78,22 @@
          {
             display: block;
          }
+         .content {
+            max-width: 800px;
+            margin: auto;
+            padding: 18px;
+            border-radius: 5px;
+            background: #E8C9C3;
+            box-shadow: 0px 0px 5px grey;
+         }
+
       </style>
-      <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"                                           integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+      <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABSUlEQVQ4jZ2Tu0oDURCG90myKwERC8FKfAAfwdZCsU0bmwhWglY2Ad2zRhS0sUshsUiRRjQgMQYEG20khezZZO+5bD6LQGJINpoUfzPDfDNz5vxKQpj7qrBCTUhmkSqsUNWtjKIJ2Zq1eADRZajMWrR1Z3Py7LN2baEJiaIJSbbiYwbRVB0+emhC0gwjAPSqPwTo1QCv3RtTq9sDoBFGrFz2O+4UbLIVn/WbXxPEqVxvA3Bc9gaxzXyTVNEZXWGSdu9tAL79iOWLYbzw2QJgu+DEA5KG5F12ADh48EZy/wKkSy4AX06XxXM5G2ApJ6m7XQD2Su4Y/E/A0ZMHwEejS9IYn24qYPXKwm7175wqOhMfdyrAeA0AeDM7LMRcJxaQNCSnLz65WsBmvhn7N9Ill1wtYOO20QfM48SBmYQVKomzOe2sy1DVzcwP7InxY4zEPaQAAAAASUVORK5CYII=">
+      <script src="https://code.jquery.com/jquery-3.5.0.slim.min.js"                                           integrity="sha256-MlusDLJIP1GRgLrOflUQtshyP0TwT/RHXsI1wWGnQhs="                     crossorigin="anonymous"></script>
       <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"                       integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
       <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"   integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"                     integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-      <script src="http://127.0.0.1:8080/sjcl.js"                                                              integrity="sha384-FFPJVWGI3DSq/EWczQYdkJKom9PM1KwTzBRZdjmlyheyETBjgrdbXZLSsKUqFSGw" >
-         // TODO fix lets encrypt so we can serve everything via https
+      <script src="sjcl.js"                                                                                   integrity="sha384-FFPJVWGI3DSq/EWczQYdkJKom9PM1KwTzBRZdjmlyheyETBjgrdbXZLSsKUqFSGw" >
       </script>
 
       <script>
@@ -96,31 +172,37 @@ console.log(RWEncrypted.bytes);
       </script>
 	</head>
    <body>
-      <h1>Temp Url shortener</h1>
-      <h3>Pre Alpha test site, links will be cleard during development without notice.</h3>
-      <form id="shortener" method="POST" enctype="multipart/form-data">
-         <input type="radio" name="len" value="1" checked>Length 1: valid for 10min<br/>
-         <input type="radio" name="len" value="2">Length 2: valid for 12h<br/>
-         <input type="radio" name="len" value="3">Length 3: valid for 30days<br/><br />
-         <br>
-         <input type="radio" name="requestType" id="showURL" value="url" checked>Redirect to temporary URL<br />
-         <input type="radio" name="requestType" id="showText" value="text">Temporary text dump<br />
-         <input type="radio" name="requestType" id="showFile" value="file">Uppload temporary file<br /><br />
-			<div id="urlDiv">
-            Submit URL to temporarly redirect to:<br />
-            <input type="text" name="url"><br />
-         </div>
-         <div id="textDiv">
-            Submit text to temporarly save: <br />
-            <textarea form="shortener" rows="7" cols="80" name="text"></textarea>
-         </div>
-         <div id="fileDiv">
-            Uppload encrypted temporary file: <br />
-            <input type="file" id="file" name="file" onchange="loadFile(event)">
-            <br>
-            <br>
-         </div>
-         <input type="submit" onsubmit="verify()">
-		</form>
-		</body>
+
+      <div class="topnav">
+         <a class="active" href="#home">Temp Url shortener</a>
+         <div class="info">Pre Alpha test site, links will be cleard during development without notice.</div>
+      </div>
+      <br>
+      <div class="content">
+         <form id="shortener" method="POST" enctype="multipart/form-data">
+            <div class="piclen">
+               <input type="radio" name="len" value="1" checked>Length 1: valid for 10min<br/>
+               <input type="radio" name="len" value="2">Length 2: valid for 12h<br/>
+               <input type="radio" name="len" value="3">Length 3: valid for 30days<br/><br />
+            </div>
+               <input type="radio" name="requestType" id="showURL" value="url" checked>Redirect to temporary URL<br />
+               <input type="radio" name="requestType" id="showText" value="text">Temporary text dump<br />
+               <input type="radio" name="requestType" id="showFile" value="file">Uppload temporary file<br /><br />
+		   	   <div id="urlDiv">
+                  Submit URL to temporarly redirect to:<br />
+                  <input type="text" name="url" class="inputbox" placeholder="Your URL Here"><br />
+               </div>
+               <div id="textDiv">
+                  Submit text to temporarly save: <br />
+                  <textarea form="shortener" rows="7" cols="80" name="text"></textarea>
+               </div>
+               <div id="fileDiv">
+                  Uppload encrypted temporary file: <br />
+                  <input type="file" id="file" name="file" onchange="loadFile(event)">
+               </div>
+            <input type="submit"></button>
+
+         </form>
+      </div>
+	</body>
 <html>

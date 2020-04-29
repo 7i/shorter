@@ -55,6 +55,7 @@ func main() {
 		log.Fatalln("Unable to open Backup database file", err)
 	}
 	defer db.Close()
+	setupDB(db)
 
 	// Write out server config on startup if logging is enabled
 	if debug && logger != nil {
