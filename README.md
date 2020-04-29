@@ -38,7 +38,7 @@ shorter /path/to/config
 - [ ] Temporary file upload
    - [ ] File encryption with AES-GCM
    - [x] Random human-readable password made in Diceware style via JavaScript (dictionary words not dice rolls)
-- [ ] Move to ssl with Let's Encrypt
+- [x] Move to ssl with Let's Encrypt
 - [ ] Save all active links in a database file so we can resume the server state if the server needs to restart
 - [ ] Add support for subdomains with diffrent configs e.g. d1.7i.se
    - [ ] Add password/client cert protected subdomain management e.g. d1.7i.se/admin
