@@ -33,6 +33,8 @@ shorter /path/to/config
    - [x] 2 chars long - 12h timeout
    - [x] 3 chars long - 30days timeout
    - [x] make timeouts configurable
+   - [ ] temporary word bindings (7i.se/coolthing)
+   - [ ] optional removal of link after N accesses 
 - [x] Add config file that specifies relevant options
 - [ ] Pastebin functionality with same timeouts as above
 - [ ] Temporary file upload
