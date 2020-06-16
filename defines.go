@@ -1,6 +1,10 @@
 package main
 
-import "log"
+import (
+	"log"
+
+	"github.com/boltdb/bolt"
+)
 
 const (
 	debug = true
@@ -8,11 +12,14 @@ const (
 	charset = "abcdefghijkmnopqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 	// dateFormat specifies the format in which date and time is represented.
 	dateFormat = "Mon 2006-01-02 15:04 MST"
-	// logSep sets the separator between log entrys in the log file, only used for aesthetics purposes, do not rely on this if doing log parsing
+	// logSep sets the separator between log entrys in the log file, only used for aesthetics purposes.
+	// do not rely on this if doing log parsing.
+	// TODO, add secure log entrys (generate seperator from sha256(key+time+lognr) and/or header for all entrys with lenght specified and/or signed log entrys so we can verify all entrys.)
 	logSep = "\n---\n"
 	// errServerError contains the generic error message users will se when somthing goes wrong
-	errServerError = "Unexpected server error"
-	errInvalidKey  = "Invalid key"
+	errServerError    = "Internal Server Error"
+	errInvalidKey     = "Invalid key"
+	errNotImplemented = "Not Implemented"
 )
 
 var (
@@ -24,4 +31,6 @@ var (
 	linkLen3 linkLen
 	// If we want to log errors logger will write these to a file specified in the config
 	logger *log.Logger
+	//
+	db *bolt.DB
 )

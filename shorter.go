@@ -49,13 +49,18 @@ func main() {
 		logger = nil
 	}
 
-	// create bolt db file
-	db, err := bolt.Open(filepath.Join(config.BackupDBDir, "shorter.db"), 0600, nil)
+	// Set up DB file so we can resume state if server goes down
+	var db *bolt.DB
+	if config.BackupDBDir == "" {
+		db, err = bolt.Open(filepath.Join(config.BaseDir, "shorter.db"), 0600, nil)
+	} else {
+		db, err = bolt.Open(filepath.Join(config.BackupDBDir, "shorter.db"), 0600, nil)
+	}
 	if err != nil {
 		log.Fatalln("Unable to open Backup database file", err)
 	}
 	defer db.Close()
-	setupDB(db)
+	setupDB(db) // defined in db.go
 
 	// Write out server config on startup if logging is enabled
 	if debug && logger != nil {
@@ -75,13 +80,15 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Handle requests to /sjcl.js
-	handleSJCL(mux) // defined in handlers.go
-	handleRoot(mux) // defined in handlers.go
+	handleJS(mux)     // defined in handlers.go
+	handleImages(mux) // defined in handlers.go
+	handleRobots(mux) // defined in handlers.go
+	handleRoot(mux)   // defined in handlers.go
 	// Start server
 	if debug && logger != nil {
 		logger.Println("Starting server", logSep)
 	}
-	server := getServer(mux)
+	server := getServer(mux) // defined in letsencrypt.go
 	// Using LetsEncrypt, no premade cert and keyfiles needed
 	log.Fatalln(server.ListenAndServeTLS("", ""))
 }

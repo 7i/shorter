@@ -8,6 +8,10 @@ import (
 
 // Not a crypto related function so no need for constant time
 func validate(s string) bool {
+	if s[len(s)-1] == '~' {
+		s = s[:len(s)-1]
+	}
+
 	for _, char := range s {
 		if !strings.Contains(charset, string(char)) {
 			return false
@@ -62,4 +66,20 @@ func initLinkLens() {
 
 func addHeaders(w http.ResponseWriter) {
 	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+}
+
+// hasValidHost returns true if the host string matches any of the valid hosts specified in the config
+func validRequest(r *http.Request) bool {
+	var validHost, validType bool
+	for _, d := range config.DomainNames {
+		if r.Host == d {
+			validHost = true
+		}
+	}
+
+	if r.Method == "GET" || r.Method == "POST" {
+		validType = true
+	}
+
+	return validHost && validType
 }

@@ -1,15 +1,9 @@
-# TemplateDir specifies the path to the template directory for the shorter service
-TemplateDir: "/path/to/template/directory"
-# UploadDir specifies the path to the directory that shorter will save temporary files and textblobs to
-UploadDir: "/path/to/upload/directory"
-# BackupDBDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
-BackupDBDir: "/path/to/backup/directory"
-# CertDir specifies the path to the directory that shorter will use to cache the LetsEnctypt certs
-CertDir: "/path/to/cert/directory"
-# Logfile specifies the file to write logs to, if empty or missing, no logging will be done
-Logfile: "/path/to/logfile"
-# Domainname for the shorter service
-DomainName: "example.com"
+# BaseDir specifies the path to the template directory for the shorter service
+BaseDir: "/path/to/template/directory"
+# Domainnames for the shorter service
+DomainNames:
+  - "example.com"
+  - "example2.com"
 # AddressPort specifies the adress and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
 AddressPort: "127.0.0.1:8080"
 # TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
@@ -27,9 +21,26 @@ MaxDiskUsage: 1000000000000 # 1TB
 # LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 LinkAccessMaxNr: 100000
 
-### OPTIONAL Parameters
-# Email optionally specifies a contact email address.
-# This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
-# If the Client's account key is already registered, Email is not used.
-# Note that this value is ONLY used if UseLetsEncrypt is set to TRUE
-Email: "email@example.com"
+## OPTIONAL Parameters
+
+## Email optionally specifies a contact email address.
+## This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
+## If the Client's account key is already registered, Email is not used.
+#Email: "email@example.com"
+
+## UploadDir specifies the path to the directory that shorter will save temporary files and textblobs to
+## If UploadDir is not specified BaseDir/Uploads is used
+#UploadDir: "/path/to/upload/directory"
+
+## BackupDBDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
+## If BackupDBDir is not specified BaseDir/BackupDB is used
+#BackupDBDir: "/path/to/backup/directory"
+
+## CertDir specifies the path to the directory that shorter will use to cache the LetsEnctypt certs
+## If CertDir is not specified BaseDir is used.
+## Note that acme/autocert will create a acme directory in the specified path and save all certs in this directory.
+#CertDir: "/path/to/cert/directory"
+
+## Logfile specifies the file to write logs to, if empty or missing, no logging will be done
+#Logfile: "/path/to/logfile"
+

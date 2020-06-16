@@ -11,7 +11,7 @@ import (
 // Config contains all valid fields from a shorter config file
 type Config struct {
 	// TemplateDir specifies the path to the template directory for the shorter service
-	TemplateDir string `yaml:"TemplateDir"`
+	BaseDir string `yaml:"TemplateDir"`
 	// UploadDir specifies the path to the directory that shorter will save temporary files and textblobs to
 	UploadDir string `yaml:"UploadDir"`
 	// BackupDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
@@ -21,7 +21,7 @@ type Config struct {
 	// Logfile specifies the file to write logs to, if empty or missing, no logging will be done
 	Logfile string `yaml:"Logfile"`
 	// DomainName should be the domain name of the instance of shorter, e.g. 7i.se
-	DomainName string `yaml:"DomainName"`
+	DomainNames []string `yaml:"DomainNames"`
 	// AddressPort specifies the address and port the shorter service should listen on
 	AddressPort string `yaml:"AddressPort"`
 	// TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on

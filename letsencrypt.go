@@ -13,10 +13,17 @@ import (
 // getAuroCertTLSConf is used if UseLetsEncrypt is set to true.
 // Note that a CertDir must be specified in the config if UseLetsEncrypt is set to true
 func getServer(mux *http.ServeMux) (server *http.Server) {
+	var certdir string
+	if config.CertDir != "" {
+		certdir = config.CertDir
+	} else {
+		certdir = config.BaseDir
+	}
+
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
-		Cache:      autocert.DirCache(config.CertDir),
-		HostPolicy: autocert.HostWhitelist(config.DomainName),
+		Cache:      autocert.DirCache(certdir),
+		HostPolicy: autocert.HostWhitelist(config.DomainNames...),
 		Email:      config.Email,
 	}
 	tlsConf := &tls.Config{

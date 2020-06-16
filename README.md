@@ -47,6 +47,16 @@ shorter /path/to/config
    - [ ] Move all js and css to seperate files and modify html/template files to use these
    - [ ] Setup a CSP report collector
    - [ ] setup nonce for all scripts and css files
+- [ ] Use blocklists for known malware sites, integrate with:
+   - [ ] https://www.stopbadware.org/firefox
+   - [ ] https://www.malwaredomainlist.com
+   - [ ] https://isc.sans.edu/suspicious_domains.html
+   - [ ] https://zeltser.com/malicious-ip-blocklists/
+   - [ ] if linking to a page that redirects, follow redirects only for 5 levels and display error if redirected more times
+- [ ] Check entropy, beginning and end of uploaded file as a sanity check to verifiy that the file is encrypted.
+- [ ] Include report form to take down links that breaks terms of usage
+   - [ ] implement capcha for submitting reports to take down links
+- [ ] Create Terms of usage
 
 
 ## License
