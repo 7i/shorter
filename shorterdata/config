@@ -1,13 +1,5 @@
-# BaseDir specifies the path to the template directory for the shorter service
-BaseDir: "/path/to/template/directory"
-# Domainnames for the shorter service
-DomainNames:
-  - "example.com"
-  - "example2.com"
 # AddressPort specifies the adress and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
 AddressPort: "127.0.0.1:8080"
-# TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
-TLSAddressPort: "127.0.0.1:10443"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
 Clear1Duration: "10m"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 2 characters
@@ -15,13 +7,30 @@ Clear2Duration: "12h"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 3 characters
 Clear3Duration:  "720h"
 # Max filesize when uploading temporary files
-MaxFileSize: 4000000000 # 4GB
+MaxFileSize: 10000000 # 10MB
 # Maximum disk usage that shorter is allowd to use
 MaxDiskUsage: 1000000000000 # 1TB
+# Maximum RAM usage that shorter is allowd to use before returning 500 errLowRAM errors to new requests
+MaxRAM: 1000000000 # 1GB
 # LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 LinkAccessMaxNr: 100000
 
 ## OPTIONAL Parameters
+
+## BaseDir specifies the path to the template directory for the shorter service
+#BaseDir: "/path/to/template/directory"
+
+## Domainnames for the shorter service
+#DomainNames:
+#  - "example.com"
+#  - "example2.com"
+
+# NoTLS specifies if we should inactivate TLS and only use unencrypted HTTP
+#default true to make it easier to test the setup before going in to production
+NoTLS: true
+
+## TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
+#TLSAddressPort: "127.0.0.1:10443"
 
 ## Email optionally specifies a contact email address.
 ## This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
@@ -41,6 +50,10 @@ LinkAccessMaxNr: 100000
 ## Note that acme/autocert will create a acme directory in the specified path and save all certs in this directory.
 #CertDir: "/path/to/cert/directory"
 
-## Logfile specifies the file to write logs to, if empty or missing, no logging will be done
+## Logging specifies if shorter should write debug data and requests to a log file, if false no logging will be done
+Logging: true
+
+## Logfile specifies the file to write logs to
+## If Logfile is not specified BaseDir/shorter.log is used
 #Logfile: "/path/to/logfile"
 

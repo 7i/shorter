@@ -10,18 +10,22 @@ import (
 
 // Config contains all valid fields from a shorter config file
 type Config struct {
-	// TemplateDir specifies the path to the template directory for the shorter service
-	BaseDir string `yaml:"TemplateDir"`
+	// BaseDir specifies the path to the base directory to search for resources for the shorter service
+	BaseDir string `yaml:"BaseDir"`
 	// UploadDir specifies the path to the directory that shorter will save temporary files and textblobs to
 	UploadDir string `yaml:"UploadDir"`
 	// BackupDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
 	BackupDBDir string `yaml:"BackupDBDir"`
 	// CertDir specifies the path to the directory that shorter will use to cache the LetsEnctypt certs
 	CertDir string `yaml:"CertDir"`
-	// Logfile specifies the file to write logs to, if empty or missing, no logging will be done
+	// Logging specifies if shorter should write debug data and requests to a log file, if false no logging will be done
+	Logging bool `yaml:"Logging"`
+	// Logfile specifies the file to write logs to, If Logfile is not specified BaseDir/shorter.log is used
 	Logfile string `yaml:"Logfile"`
 	// DomainName should be the domain name of the instance of shorter, e.g. 7i.se
 	DomainNames []string `yaml:"DomainNames"`
+	// NoTLS specifies if we should inactivate TLS and only use unencrypted HTTP
+	NoTLS bool `yaml:"NoTLS"`
 	// AddressPort specifies the address and port the shorter service should listen on
 	AddressPort string `yaml:"AddressPort"`
 	// TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
@@ -39,6 +43,8 @@ type Config struct {
 	MaxDiskUsage int64 `yaml:"MaxDiskUsage"`
 	// LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 	LinkAccessMaxNr int `yaml:"LinkAccessMaxNr"`
+	// MaxRam sets the maximum RAM usage that shorter is allowd to use before returning 500 errLowRAM errors to new requests
+	MaxRAM uint64 `yaml:"MaxRAM"`
 	// Email optionally specifies a contact email address.
 	// This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
 	// If the Client's account key is already registered, Email is not used.
@@ -67,7 +73,7 @@ type linkLen struct {
 // Add adds the value lnk with a new key to linkMap and removes the same key from freeMap and returns the key used or an error, note that the error should be useful for the user while not leak server information
 func (l *linkLen) Add(lnk *link) (key string, err error) {
 	if lnk == nil {
-		if debug && logger != nil {
+		if logger != nil {
 			logger.Println("Add: invalid parameter lnk, lnk can not be nil", logSep)
 		}
 		return "", errors.New(errServerError)
@@ -79,7 +85,7 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 	// Formated output for the log
 	logstr := ""
 
-	if debug && logger != nil {
+	if logger != nil {
 		logstr = "lnk:\n   linkType: " + lnk.linkType + "\n   data: " + url.QueryEscape(lnk.data) + "\n   timeout: " + lnk.timeout.UTC().Format(dateFormat) + "\n   xTimes: " + strconv.Itoa(lnk.times)
 		logger.Println("Starting to Add", logstr)
 		logger.Println("len(l.freeMap):", len(l.freeMap))
@@ -91,19 +97,19 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 	}
 
 	if len(l.freeMap) == 0 {
-		if debug && logger != nil {
+		if logger != nil {
 			logger.Println("Error: No keys left", logSep)
 		}
 		return "", errors.New("No keys left for key length " + strconv.Itoa(len(l.endClear.key)))
 	}
 	if time.Since(lnk.timeout) > 0 {
-		if debug && logger != nil {
+		if logger != nil {
 			logger.Println("Error, ", logstr, "timeout has to be in the future", logSep)
 		}
 		return "", errors.New(errServerError)
 	}
 	for key = range l.freeMap {
-		if debug && logger != nil {
+		if logger != nil {
 			logger.Println("Picking key:", key)
 		}
 		lnk.key = key
@@ -111,13 +117,13 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 			l.nextClear = lnk
 		} else {
 			if l.endClear == nil {
-				if debug && logger != nil {
+				if logger != nil {
 					logger.Println("Error", logstr, "endClear is nil but nextClear is set to a value", logSep)
 				}
 				return "", errors.New(errServerError)
 			}
 			if l.endClear.timeout.Sub(lnk.timeout) > 0 {
-				if debug && logger != nil {
+				if logger != nil {
 					logger.Println("Error", logstr, "timeout has to be after the previous links timeout", logSep)
 				}
 				return "", errors.New(errServerError)
@@ -127,7 +133,7 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		l.endClear = lnk
 		l.linkMap[key] = lnk
 		delete(l.freeMap, key)
-		if debug && logger != nil {
+		if logger != nil {
 			logger.Println("Finished adding key:", key, "with", logstr, "\nl.nextClear.key", l.nextClear.key, "\nl.endClear.key", l.endClear.key, logSep)
 		}
 		return key, nil
@@ -137,7 +143,7 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 
 // TimeoutHandler removes links from its linkMap when the links have timed out. Start TimeoutHandler in a separate gorutine and only start one TimeoutHandler() per linkLen.
 func (l *linkLen) TimeoutManager() {
-	if debug && logger != nil {
+	if logger != nil {
 		logger.Println("TimeoutHandler started for", len(l.freeMap), "keys", logSep)
 	}
 	// Check if any new keys should be cleared every 10 seconds
@@ -168,13 +174,13 @@ func (l *linkLen) TimeoutManager() {
 				l.nextClear = nil
 				l.endClear = nil
 			} else {
-				if debug && logger != nil {
+				if logger != nil {
 					logger.Println("ERROR: invalid state, if l.nextClear.nextClear == nil then l.nextClear has to be equal to l.endClear\nlinkMap:", l.linkMap, "\nfreeMap:", l.freeMap, "\nnextClear:", l.nextClear, "\nendClear:", l.endClear, logSep)
 				}
 			}
 			delete(l.linkMap, keyToClear)
 			l.freeMap[keyToClear] = true
-			if debug && logger != nil {
+			if logger != nil {
 				logger.Println("Finished clearing nextClear of length:", len(keyToClear), "\ncurrently using:", len(l.linkMap), "keys\ncurrent free keys:", len(l.freeMap), logSep)
 				totalkeys := len(l.linkMap) + len(l.freeMap)
 				// verify that the number of keys are valid

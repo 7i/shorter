@@ -22,7 +22,7 @@ func handleRoot(mux *http.ServeMux) {
 	for _, domain := range config.DomainNames {
 		template, err := template.ParseFiles(filepath.Join(config.BaseDir, domain, "index.tmpl"))
 		if err != nil {
-			if debug && logger != nil {
+			if logger != nil {
 				logger.Println("Missing /"+domain+"/index.tmpl in Template dir, fallback to default index.tmpl", logSep)
 			}
 			templateMap[domain] = defaultTmpl
@@ -49,14 +49,14 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		http.Error(w, errServerError, http.StatusInternalServerError)
 		return
 	}
-	if debug && logger != nil {
+	if logger != nil {
 		logger.Println("request:\n", r.Host+r.RequestURI, "\n", r, logSep)
 	}
 
 	// remove / from the beginning of url and remove any character after the key
 	key := r.URL.Path[1:]
 	extradataindex := strings.IndexAny(key, "/?")
-	if extradataindex > 0 {
+	if extradataindex >= 0 {
 		key = key[:extradataindex]
 	}
 
@@ -65,7 +65,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		err := indexTmpl.Execute(w, nil)
 		if err != nil {
 			if logger != nil {
-				logger.Println("Unable to Execute index template.\nRequest:\n", r.Host+r.RequestURI, "\n", r, logSep)
+				logger.Println("Unable to Execute index template.\nRequest:\n", r.Host+r.RequestURI, "\n", r, "\n", indexTmpl, logSep)
 			}
 			http.Error(w, errServerError, http.StatusInternalServerError)
 		}
@@ -146,7 +146,24 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			fmt.Fprint(w, "https://"+r.Host+"/"+key+"/ now pointing to "+html.EscapeString(formURL)+" \nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
 			return
 		case "text":
-			http.Error(w, errNotImplemented, http.StatusNotImplemented)
+			if lowRAM() {
+				http.Error(w, errLowRAM, http.StatusInternalServerError)
+				return
+			}
+			textBlob := r.Form.Get("text")
+			currentLinkLen.mutex.RLock()
+			currentLinkLenTimeout := currentLinkLen.timeout
+			currentLinkLen.mutex.RUnlock()
+			newLink := &link{linkType: "text", data: textBlob, times: xTimes, timeout: time.Now().Add(currentLinkLenTimeout)}
+			key, err := currentLinkLen.Add(newLink)
+			if err != nil {
+				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			// TODO use template to make a better looking output, default template and optional templates for each domain
+			// Note that r.Host has been validated earlier
+			fmt.Fprint(w, "https://"+r.Host+"/"+key+"/ will now display the text that was submitted \nThis link and the data will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
 			return
 		case "file":
 			http.Error(w, errNotImplemented, http.StatusNotImplemented)
@@ -209,7 +226,8 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 		http.Redirect(w, r, lnk.data, http.StatusTemporaryRedirect)
 		return
 	case "text":
-		http.Error(w, errNotImplemented, http.StatusNotImplemented)
+		w.Header().Add("Content-Type", "text/plain")
+		fmt.Fprint(w, lnk.data)
 		return
 	case "file":
 		http.Error(w, errNotImplemented, http.StatusNotImplemented)
@@ -219,27 +237,47 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 	}
 }
 
-func handleJS(mux *http.ServeMux) {
-	f, err := ioutil.ReadFile(filepath.Join(config.BaseDir, "sjcl.js"))
+func handleCSS(mux *http.ServeMux) {
+	f, err := ioutil.ReadFile(filepath.Join(config.BaseDir, "css", "shorter.css"))
 	if err != nil {
-		log.Fatalln("Missing sjcl.js in Template dir")
+		log.Fatalln("Missing shorter.css in Template dir/css/")
 	}
-	handlejsfile := func(w http.ResponseWriter, r *http.Request) {
+
+	mux.HandleFunc("/shorter.css", getSingleFileHandler(f, "text/css"))
+}
+
+func handleJS(mux *http.ServeMux) {
+	f, err := ioutil.ReadFile(filepath.Join(config.BaseDir, "js", "sjcl.js"))
+	if err != nil {
+		log.Fatalln("Missing sjcl.js in Template dir/js/")
+	}
+
+	mux.HandleFunc("/sjcl.js", getSingleFileHandler(f, "text/javascript"))
+
+	f, err = ioutil.ReadFile(filepath.Join(config.BaseDir, "js", "shorter.js"))
+	if err != nil {
+		log.Fatalln("Missing shorter.js in Template dir/js/")
+	}
+	mux.HandleFunc("/shorter.js", getSingleFileHandler(f, "text/javascript"))
+}
+
+func getSingleFileHandler(f []byte, mimeType string) (handleJSFile func(w http.ResponseWriter, r *http.Request)) {
+	handleJSFile = func(w http.ResponseWriter, r *http.Request) {
 		addHeaders(w)
 		if validRequest(r) {
-			w.Header().Add("Content-Type", "text/javascript")
+			w.Header().Add("Content-Type", mimeType)
 			w.Header().Add("Cache-Control", "max-age=2592000, public")
 			fmt.Fprintf(w, "%s", f)
 			return
 		}
 		http.Error(w, errServerError, http.StatusInternalServerError)
 	}
-	mux.HandleFunc("/sjcl.js", handlejsfile)
+	return
 }
 
 // handleImages adds /logo.png, /favicon.ico and /favicon.png to all domains specified in config, if a domain is missing a image it will fall back to the default image
 func handleImages(mux *http.ServeMux) {
-	ImageMap := make(map[string][]byte)
+	ImageMap = make(map[string][]byte)
 
 	defaultLogo, err := ioutil.ReadFile(filepath.Join(config.BaseDir, "logo.png"))
 	if err != nil {
@@ -253,7 +291,7 @@ func handleImages(mux *http.ServeMux) {
 	for _, domain := range config.DomainNames {
 		logo, err := ioutil.ReadFile(filepath.Join(config.BaseDir, domain, "logo.png"))
 		if err != nil {
-			if debug && logger != nil {
+			if logger != nil {
 				logger.Println("Missing /"+domain+"/logo.png in Template dir, fallback to default logo.png", logSep)
 			}
 			ImageMap[domain+"-logo"] = defaultLogo
@@ -263,7 +301,7 @@ func handleImages(mux *http.ServeMux) {
 
 		favicon, err := ioutil.ReadFile(filepath.Join(config.BaseDir, domain, "favicon.png"))
 		if err != nil {
-			if debug && logger != nil {
+			if logger != nil {
 				logger.Println("Missing /"+domain+"/favicon.png in Template dir, fallback to default favicon.png", logSep)
 			}
 			ImageMap[domain+"-favicon"] = defaultFavicon
@@ -272,38 +310,30 @@ func handleImages(mux *http.ServeMux) {
 		}
 	}
 
-	handleLogoFile := func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/logo.png", getImgHandler("-logo"))
+	mux.HandleFunc("/favicon.png", getImgHandler("-favicon"))
+	mux.HandleFunc("/favicon.ico", getImgHandler("-favicon"))
+}
+
+func getImgHandler(img string) (handleImgFile func(w http.ResponseWriter, r *http.Request)) {
+	handleImgFile = func(w http.ResponseWriter, r *http.Request) {
 		addHeaders(w)
 		if validRequest(r) {
 			w.Header().Add("Content-Type", "image/png")
 			w.Header().Add("Cache-Control", "max-age=2592000, public")
-			fmt.Fprintf(w, "%s", ImageMap[r.Host+"-logo"])
+			fmt.Fprintf(w, "%s", ImageMap[r.Host+img])
 			return
 		}
 		http.Error(w, errServerError, http.StatusInternalServerError)
 	}
-
-	handleFaviconFile := func(w http.ResponseWriter, r *http.Request) {
-		addHeaders(w)
-		if validRequest(r) {
-			w.Header().Add("Content-Type", "image/png")
-			w.Header().Add("Cache-Control", "max-age=2592000, public")
-			fmt.Fprintf(w, "%s", ImageMap[r.Host+"-favicon"])
-			return
-		}
-		http.Error(w, errServerError, http.StatusInternalServerError)
-	}
-
-	mux.HandleFunc("/logo.png", handleLogoFile)
-	mux.HandleFunc("/favicon.png", handleFaviconFile)
-	mux.HandleFunc("/favicon.ico", handleFaviconFile)
+	return
 }
 
 // handleRobots will return the robots.txt located in the Template dir specified in the config file, if no robots.txt file is found we return a 404 error
 func handleRobots(mux *http.ServeMux) {
 	f, err := ioutil.ReadFile(filepath.Join(config.BaseDir, "robots.txt"))
 	if err != nil {
-		if debug && logger != nil {
+		if logger != nil {
 			logger.Println("Missing robots.txt in Template dir, fallback to returning 404 on requests for robots.txt", logSep)
 		}
 		handler404 := func(w http.ResponseWriter, r *http.Request) {

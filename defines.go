@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	debug = true
 	// charset consists of alphanumeric characters with some characters removed due to them being to similar in some fonts.
 	charset = "abcdefghijkmnopqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 	// dateFormat specifies the format in which date and time is represented.
@@ -20,6 +19,7 @@ const (
 	errServerError    = "Internal Server Error"
 	errInvalidKey     = "Invalid key"
 	errNotImplemented = "Not Implemented"
+	errLowRAM         = "No Space available, new space will be available as old links become invalid"
 )
 
 var (
@@ -33,4 +33,8 @@ var (
 	logger *log.Logger
 	//
 	db *bolt.DB
+	// ImageMap is used in handlers.go to map requests to imagedata
+	ImageMap map[string][]byte
+	// TextBlobs is a temporary map untill saving to DB is implemented
+	TextBlobs map[string][]byte
 )

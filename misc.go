@@ -1,12 +1,16 @@
 package main
 
 import (
+	"go/build"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 )
 
-// Not a crypto related function so no need for constant time
+// validate validates if string s contains only characters in charset. validate is not a crypto related function so no need for constant time
 func validate(s string) bool {
 	if s[len(s)-1] == '~' {
 		s = s[:len(s)-1]
@@ -59,7 +63,7 @@ func initLinkLens() {
 			}
 		}
 	}
-	if debug && logger != nil {
+	if logger != nil {
 		logger.Println("All maps initialized", logSep)
 	}
 }
@@ -82,4 +86,35 @@ func validRequest(r *http.Request) bool {
 	}
 
 	return validHost && validType
+}
+
+func lowRAM() bool {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return m.Sys < config.MaxRAM
+}
+
+func findFolderDefaultLocations(folder string) (path string) {
+	if _, err := os.Stat(filepath.Join(".", folder)); !os.IsNotExist(err) {
+		return filepath.Join(".", folder)
+	}
+	possibleDirs := os.Getenv("GOPATH")
+	if possibleDirs == "" {
+		possibleDirs = build.Default.GOPATH
+	} else {
+		var dirs []string
+		if runtime.GOOS == "windows" {
+			dirs = strings.Split(possibleDirs, ";")
+		} else {
+			dirs = strings.Split(possibleDirs, ":")
+		}
+		for _, dir := range dirs {
+			if _, err := os.Stat(filepath.Join(dir, "src", "github.com", "7i", "shorter", folder)); !os.IsNotExist(err) {
+				// Found
+				return filepath.Join(dir, "src", "github.com", "7i", "shorter", folder)
+			}
+		}
+	}
+
+	return ""
 }
