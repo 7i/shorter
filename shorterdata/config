@@ -1,3 +1,8 @@
+
+# Domainnames for the shorter service
+DomainNames:
+  - "127.0.0.1:8080"
+  - "localhost:8080"
 # AddressPort specifies the adress and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
 AddressPort: "127.0.0.1:8080"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
@@ -20,10 +25,6 @@ LinkAccessMaxNr: 100000
 ## BaseDir specifies the path to the template directory for the shorter service
 #BaseDir: "/path/to/template/directory"
 
-## Domainnames for the shorter service
-#DomainNames:
-#  - "example.com"
-#  - "example2.com"
 
 # NoTLS specifies if we should inactivate TLS and only use unencrypted HTTP
 #default true to make it easier to test the setup before going in to production
@@ -56,4 +57,3 @@ Logging: true
 ## Logfile specifies the file to write logs to
 ## If Logfile is not specified BaseDir/shorter.log is used
 #Logfile: "/path/to/logfile"
-
