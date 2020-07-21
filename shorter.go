@@ -89,6 +89,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Handle requests to /sjcl.js
+	handleCSS(mux)    // defined in handlers.go
 	handleJS(mux)     // defined in handlers.go
 	handleImages(mux) // defined in handlers.go
 	handleRobots(mux) // defined in handlers.go
