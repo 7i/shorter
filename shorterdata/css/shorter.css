@@ -1,0 +1,144 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0px;
+    font-family: 'Roboto', sans-serif;
+    background-color: #fafafa;
+}
+
+.header {
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 1em;
+    justify-content: center;
+    align-items: center;
+    padding: 2em;
+}
+
+.header img {
+    width: 4em;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: auto;
+    justify-content: center;
+    gap: 1em;
+    max-width: 96vw;
+    margin: 5em auto 1em;
+}
+
+.content > * {
+    background-color: #fff;
+    box-shadow: 1px 1px 4px grey;
+    max-width: inherit;
+    box-sizing: border-box;
+}
+
+#shortener {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1em;
+    width: 800px;
+    max-width: inherit;
+    box-sizing: border-box;
+}
+
+.info {
+    color: #C00000;
+}
+
+#shortener, .info {
+    padding: 2em;
+}
+@media (max-width: 767px) {
+    .content {
+        margin: 1em auto;
+    }
+    
+    #shortener, .info {
+        padding: 1em;
+    }
+}
+
+.radio-box {
+    display: grid;
+    justify-content: left;
+    align-items: center;
+    grid-template-columns: auto 1fr;
+    width: 100%;
+    gap: 0.5em;
+}
+
+.file-box {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: left;
+    gap: 1em;
+    align-items: center;
+}
+
+input[type=text],
+select {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+textarea {
+    width: 100%;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+input[type=submit], .file-upload {
+    display: block;
+    width: fit-content;
+    font-size: inherit;
+    text-align: center;
+    background-color: #209cee;
+    color: white;
+    padding: 1em 2em;
+    text-transform: uppercase;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+}
+
+input[type=submit] {
+    width: 100%;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+#urlDiv,
+#fileDiv,
+#textDiv {
+    display: none;
+    grid-column: span 2;
+    margin: 1em 0;
+    gap: 0.5em;
+    grid-template-columns: 100%;
+}
+
+input[id="showURL"]:checked ~ #urlDiv,
+input[id="showText"]:checked ~ #textDiv,
+input[id="showFile"]:checked ~ #fileDiv {
+    display: grid;
+}
