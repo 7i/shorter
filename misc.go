@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"go/build"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -91,7 +94,7 @@ func validRequest(r *http.Request) bool {
 func lowRAM() bool {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	return m.Sys < config.MaxRAM
+	return m.Sys > config.MaxRAM
 }
 
 func findFolderDefaultLocations(folder string) (path string) {
@@ -115,6 +118,58 @@ func findFolderDefaultLocations(folder string) (path string) {
 			}
 		}
 	}
-
 	return ""
+}
+
+func compress(data string) (compressedData string, err error) {
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+	if _, err := io.Copy(zw, strings.NewReader(data)); err != nil {
+		return "", err
+	}
+	if err := zw.Close(); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func redirectToDecompressed(lnk *link, w http.ResponseWriter, r *http.Request) {
+	if lnk == nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	dataReader, err := gzip.NewReader(strings.NewReader(lnk.data))
+	if err == nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, dataReader)
+	if err != nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, buf.String(), http.StatusTemporaryRedirect)
+	return
+}
+
+func returnDecompressed(lnk *link, w http.ResponseWriter) {
+	if lnk == nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	dataReader, err := gzip.NewReader(strings.NewReader(lnk.data))
+	if err == nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	if _, err = io.Copy(w, dataReader); err != nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	if err = dataReader.Close(); err != nil {
+		http.Error(w, errServerError, http.StatusInternalServerError)
+		return
+	}
+	return
 }

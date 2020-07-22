@@ -20,6 +20,8 @@ const (
 	errInvalidKey     = "Invalid key"
 	errNotImplemented = "Not Implemented"
 	errLowRAM         = "No Space available, new space will be available as old links become invalid"
+	// Do not try to gzip data that is less than minSizeToGzip
+	minSizeToGzip = 128
 )
 
 var (

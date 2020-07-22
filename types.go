@@ -53,12 +53,13 @@ type Config struct {
 
 // link tracks the contents and lifetime of a link.
 type link struct {
-	key       string
-	linkType  string
-	data      string
-	times     int
-	timeout   time.Time
-	nextClear *link
+	key          string
+	linkType     string
+	data         string
+	isCompressed bool
+	times        int
+	timeout      time.Time
+	nextClear    *link
 }
 
 type linkLen struct {
