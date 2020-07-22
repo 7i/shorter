@@ -3,6 +3,7 @@
 
 <head>
    <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
    <head>
       <link rel="icon" type="image/png"
@@ -14,36 +15,51 @@
    </head>
 
 <body>
-   <div class="topnav">
-      <img src="logo.png" class="topnavitem"></img>
-      <a class="topnavitem">Temp Url shortener</a>
-      <div class="info">Pre Alpha test site, links will be cleard during development without notice.</div>
-   </div>
-   <br>
    <div class="content">
-      <form id="shortener" method="POST" enctype="multipart/form-data">
-         <div class="piclen">
-            <input type="radio" name="len" value="1" checked>Length 1: valid for 10min<br />
-            <input type="radio" name="len" value="2">Length 2: valid for 12h<br />
-            <input type="radio" name="len" value="3">Length 3: valid for 30days<br /><br />
+      <div>
+         <div class="header">
+            <img src="logo.png"></img>
+            <h1>Temp Url shortener</h1>
          </div>
-         <input type="radio" name="requestType" id="showURL" value="url" checked>Redirect to temporary URL<br />
-         <input type="radio" name="requestType" id="showText" value="text">Temporary text dump<br />
-         <input type="radio" name="requestType" id="showFile" value="file">Uppload temporary file<br /><br />
-         <div id="urlDiv">
-            Submit URL to temporarly redirect to:<br />
-            <input type="text" name="url" class="inputbox" placeholder="Your URL Here"><br />
-         </div>
-         <div id="textDiv">
-            Submit text to temporarly save: <br />
-            <textarea form="shortener" rows="7" cols="80" name="text"></textarea>
-         </div>
-         <div id="fileDiv">
-            Uppload encrypted temporary file: <br />
-            <input type="file" id="file" name="file" onchange="loadFile(event)">
-         </div>
-         <input type="submit"></button>
-      </form>
+         <form id="shortener" method="POST" enctype="multipart/form-data">
+            <div class="radio-box">
+               <input type="radio" name="len" value="1" checked>
+               <label for="len">Length 1: valid for 10min</label>
+               <input type="radio" name="len" value="2">
+               <label for="len">Length 2: valid for 12h</label>
+               <input type="radio" name="len" value="3">
+               <label for="len">Length 3: valid for 30days</label>
+            </div>
+            <div class="radio-box">
+               <input type="radio" name="requestType" id="showURL" value="url" checked>
+               <label for="requestType">Redirect to temporary URL</label>
+               <input type="radio" name="requestType" id="showText" value="text">
+               <label for="requestType">Temporary text dump</label>
+               <input type="radio" name="requestType" id="showFile" value="file">
+               <label for="requestType">Upload temporary file</label>
+               <div id="urlDiv">
+                  <span>Submit URL to temporarly redirect to:</span>
+                  <input type="text" name="url" class="inputbox" placeholder="Your URL Here">
+               </div>
+               <div id="textDiv">
+                  <span>Submit text to temporarly save:</span>
+                  <textarea form="shortener" rows="7" cols="80" name="text"></textarea>
+               </div>
+               <div id="fileDiv">
+                  <span>Upload encrypted temporary file: </span>
+                  <div class="file-box">
+                     <label for="file" class="file-upload">Select file</label>
+                     <input type="file" multiple id="file" name="file" onchange="displayFileNames(event)">
+                     <span id="file-name"></span>
+                  </div>
+               </div>
+            </div>
+            <input type="submit"></button>
+         </form>
+      </div>
+      <div class="info">
+         <span>Pre Alpha test site, links will be cleard during development without notice.</span>
+      </div>
    </div>
 </body>
 <html>

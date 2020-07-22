@@ -23,6 +23,15 @@ function RandomPassword() {
     return password.join(' ');
 }
 
+function displayFileNames(event) {
+    const fileNames = [];
+    for (const f of event.target.files) {
+        fileNames.push(f.name);
+    }
+    const names = fileNames.join(', ');
+    document.getElementById("file-name").innerHTML = names;
+}
+
 // TODO fix encryption of files before upload and print key, and when accessing the file promt for key to decrypt the file.
 // File upload should make a sha256 hash of the file and prefix the file data with that as a sanity check.
 // For security Encrypt-then-Mac HMAC-SHA256
