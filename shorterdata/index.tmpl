@@ -2,63 +2,61 @@
 <html lang="en">
 
 <head>
-   <meta charset="utf-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      <link rel="icon" type="image/png"
-         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABSUlEQVQ4jZ2Tu0oDURCG90myKwERC8FKfAAfwdZCsU0bmwhWglY2Ad2zRhS0sUshsUiRRjQgMQYEG20khezZZO+5bD6LQGJINpoUfzPDfDNz5vxKQpj7qrBCTUhmkSqsUNWtjKIJ2Zq1eADRZajMWrR1Z3Py7LN2baEJiaIJSbbiYwbRVB0+emhC0gwjAPSqPwTo1QCv3RtTq9sDoBFGrFz2O+4UbLIVn/WbXxPEqVxvA3Bc9gaxzXyTVNEZXWGSdu9tAL79iOWLYbzw2QJgu+DEA5KG5F12ADh48EZy/wKkSy4AX06XxXM5G2ApJ6m7XQD2Su4Y/E/A0ZMHwEejS9IYn24qYPXKwm7175wqOhMfdyrAeA0AeDM7LMRcJxaQNCSnLz65WsBmvhn7N9Ill1wtYOO20QfM48SBmYQVKomzOe2sy1DVzcwP7InxY4zEPaQAAAAASUVORK5CYII=">
-      <link rel="stylesheet" type="text/css" href="shorter.css">
-      <script src="sjcl.js"
-         integrity="sha384-FFPJVWGI3DSq/EWczQYdkJKom9PM1KwTzBRZdjmlyheyETBjgrdbXZLSsKUqFSGw"></script>
-      <script src="shorter.js"></script>
-   </head>
+	<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABSUlEQVQ4jZ2Tu0oDURCG90myKwERC8FKfAAfwdZCsU0bmwhWglY2Ad2zRhS0sUshsUiRRjQgMQYEG20khezZZO+5bD6LQGJINpoUfzPDfDNz5vxKQpj7qrBCTUhmkSqsUNWtjKIJ2Zq1eADRZajMWrR1Z3Py7LN2baEJiaIJSbbiYwbRVB0+emhC0gwjAPSqPwTo1QCv3RtTq9sDoBFGrFz2O+4UbLIVn/WbXxPEqVxvA3Bc9gaxzXyTVNEZXWGSdu9tAL79iOWLYbzw2QJgu+DEA5KG5F12ADh48EZy/wKkSy4AX06XxXM5G2ApJ6m7XQD2Su4Y/E/A0ZMHwEejS9IYn24qYPXKwm7175wqOhMfdyrAeA0AeDM7LMRcJxaQNCSnLz65WsBmvhn7N9Ill1wtYOO20QfM48SBmYQVKomzOe2sy1DVzcwP7InxY4zEPaQAAAAASUVORK5CYII=">
+	<link rel="stylesheet" type="text/css" href="shorter.css">
+	<script src="sjcl.js" integrity="sha384-FFPJVWGI3DSq/EWczQYdkJKom9PM1KwTzBRZdjmlyheyETBjgrdbXZLSsKUqFSGw"></script>
+	<script src="shorter.js"></script>
+</head>
 
 <body>
-   <div class="content">
-      <div>
-         <div class="header">
-            <img src="logo.png">
-            <h1>Temp Url shortener</h1>
-         </div>
-         <form id="shortener" method="POST" enctype="multipart/form-data">
-            <div class="radio-box">
-               <input type="radio" name="len" value="1" checked>
-               <label for="len">Length 1: valid for 10min</label>
-               <input type="radio" name="len" value="2">
-               <label for="len">Length 2: valid for 12h</label>
-               <input type="radio" name="len" value="3">
-               <label for="len">Length 3: valid for 30days</label>
-            </div>
-            <div class="radio-box">
-               <input type="radio" name="requestType" id="showURL" value="url" checked>
-               <label for="requestType">Redirect to temporary URL</label>
-               <input type="radio" name="requestType" id="showText" value="text">
-               <label for="requestType">Temporary text dump</label>
-               <input type="radio" name="requestType" id="showFile" value="file">
-               <label for="requestType">Upload temporary file</label>
-               <div id="urlDiv">
-                  <span>Submit URL to temporarly redirect to:</span>
-                  <input type="text" name="url" class="inputbox" placeholder="Your URL Here">
-               </div>
-               <div id="textDiv">
-                  <span>Submit text to temporarly save:</span>
-                  <textarea form="shortener" rows="7" cols="80" name="text"></textarea>
-               </div>
-               <div id="fileDiv">
-                  <span>Upload encrypted temporary file: </span>
-                  <div class="file-box">
-                     <label for="file" class="file-upload">Select file</label>
-                     <input type="file" multiple id="file" name="file" onchange="displayFileNames(event)">
-                     <span id="file-name"></span>
-                  </div>
-               </div>
-            </div>
-            <input type="submit">
-         </form>
-      </div>
-      <div class="info">
-         <span>Pre Alpha test site, links will be cleard during development without notice.</span>
-      </div>
-   </div>
+	<div class="content">
+		<div>
+			<div class="header">
+				<img src="logo.png">
+				<h1>Temp Url shortener</h1>
+			</div>
+			<form id="shortener" method="POST" enctype="multipart/form-data">
+				<div class="radio-box">
+					<input type="radio" name="len" value="1" checked>
+					<label for="len">Length 1: valid for 10min</label>
+					<input type="radio" name="len" value="2">
+					<label for="len">Length 2: valid for 12h</label>
+					<input type="radio" name="len" value="3">
+					<label for="len">Length 3: valid for 30days</label>
+				</div>
+				<div class="radio-box">
+					<input type="radio" name="requestType" id="showURL" value="url" checked>
+					<label for="requestType">Redirect to temporary URL</label>
+					<input type="radio" name="requestType" id="showText" value="text">
+					<label for="requestType">Temporary text dump</label>
+					<input type="radio" name="requestType" id="showFile" value="file">
+					<label for="requestType">Upload temporary file</label>
+					<div id="urlDiv">
+						<span>Submit URL to temporarly redirect to:</span>
+						<input type="text" name="url" class="inputbox" placeholder="Your URL Here">
+					</div>
+					<div id="textDiv">
+						<span>Submit text to temporarly save:</span>
+						<textarea form="shortener" rows="7" cols="80" name="text"></textarea>
+					</div>
+					<div id="fileDiv">
+						<span>Upload encrypted temporary file: </span>
+						<div class="file-box">
+							<label for="file" class="file-upload">Select file</label>
+							<input type="file" multiple id="file" name="file" onchange="displayFileNames(event)">
+							<span id="file-name"></span>
+						</div>
+					</div>
+				</div>
+				<input type="submit">
+			</form>
+		</div>
+		<div class="info">
+			<span>Pre Alpha test site, links will be cleard during development without notice.</span>
+		</div>
+	</div>
 </body>
 </html>
