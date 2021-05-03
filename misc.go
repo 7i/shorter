@@ -135,41 +135,56 @@ func compress(data string) (compressedData string, err error) {
 
 func redirectToDecompressed(lnk *link, w http.ResponseWriter, r *http.Request) {
 	if lnk == nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid link in request to redirectToDecompressed().")
 		return
 	}
 	dataReader, err := gzip.NewReader(strings.NewReader(lnk.data))
 	if err == nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid link.data in request to redirectToDecompressed().")
 		return
 	}
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, dataReader)
 	if err != nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: when reading data in request to redirectToDecompressed().")
 		return
 	}
+	logOK(r, http.StatusTemporaryRedirect)
 	http.Redirect(w, r, buf.String(), http.StatusTemporaryRedirect)
 	return
 }
 
-func returnDecompressed(lnk *link, w http.ResponseWriter) {
+func returnDecompressed(lnk *link, w http.ResponseWriter, r *http.Request) {
 	if lnk == nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid lnk in request to returnDecompressed().")
 		return
 	}
 	dataReader, err := gzip.NewReader(strings.NewReader(lnk.data))
 	if err == nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid lnk.data in request to returnDecompressed().")
 		return
 	}
 	if _, err = io.Copy(w, dataReader); err != nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: while decompresing in request to returnDecompressed().")
 		return
 	}
 	if err = dataReader.Close(); err != nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: closing dataReader in request to returnDecompressed().")
 		return
 	}
+	logOK(r, http.StatusOK)
 	return
+}
+
+func logErrors(w http.ResponseWriter, r *http.Request, errStr string, statusCode int, logStr string) {
+	if logger != nil {
+		logger.Println("Request:\nStatuscode:", statusCode, logStr, errStr, "\n", r.Host+r.RequestURI, "\n", r, logSep)
+	}
+	http.Error(w, errServerError, statusCode)
+}
+
+func logOK(r *http.Request, statusCode int) {
+	if logger != nil {
+		logger.Println("Request:\nStatuscode:", statusCode, "\n", r.Host+r.RequestURI, "\n", r, logSep)
+	}
 }

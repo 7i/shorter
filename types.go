@@ -49,6 +49,8 @@ type Config struct {
 	// This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
 	// If the Client's account key is already registered, Email is not used.
 	Email string `yaml:"Email"`
+	// StaticLinks contains a list of static keys that will no time out
+	StaticLinks map[string]string `yaml:"StaticLinks"`
 }
 
 // link tracks the contents and lifetime of a link.
@@ -183,15 +185,11 @@ func (l *linkLen) TimeoutManager() {
 			l.freeMap[keyToClear] = true
 			if logger != nil {
 				logger.Println("Finished clearing nextClear of length:", len(keyToClear), "\ncurrently using:", len(l.linkMap), "keys\ncurrent free keys:", len(l.freeMap), logSep)
-				totalkeys := len(l.linkMap) + len(l.freeMap)
-				// verify that the number of keys are valid
-				if totalkeys != len(charset) && totalkeys != len(charset)*len(charset) && totalkeys != len(charset)*len(charset)*len(charset) {
-					logger.Println("ERROR: Unexpected total number of keys:", len(l.linkMap)+len(l.freeMap), logSep)
-				}
 			}
 			l.mutex.Unlock()
 			l.mutex.RLock()
 		}
 		l.mutex.RUnlock()
+
 	}
 }

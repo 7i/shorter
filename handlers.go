@@ -48,11 +48,8 @@ func handleRoot(mux *http.ServeMux) {
 // handleRequests will handle all web requests and direct the right action to the right linkLen
 func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.Template) {
 	if r == nil || indexTmpl == nil {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "error executing template.")
 		return
-	}
-	if logger != nil {
-		logger.Println("request:\n", r.Host+r.RequestURI, "\n", r, logSep)
 	}
 
 	// remove / from the beginning of url and remove any character after the key
@@ -76,11 +73,10 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		}
 		err := indexTmpl.Execute(w, nil)
 		if err != nil {
-			if logger != nil {
-				logger.Println("Unable to Execute index template.\nRequest:\n", r.Host+r.RequestURI, "\n", r, "\n", indexTmpl, logSep)
-			}
-			http.Error(w, errServerError, http.StatusInternalServerError)
+			logErrors(w, r, errServerError, http.StatusInternalServerError, "Unable to Execute index template.")
+			return
 		}
+		logOK(r, http.StatusOK)
 		return
 	}
 
@@ -93,10 +89,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 	if r.Method == http.MethodPost {
 		err := r.ParseMultipartForm(config.MaxFileSize)
 		if err != nil {
-			if logger != nil {
-				logger.Println("Error: ", err.Error(), url.QueryEscape(fmt.Sprintln(r)), logSep)
-			}
-			http.Error(w, errServerError, http.StatusInternalServerError)
+			logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: "+err.Error())
 			return
 		}
 
@@ -111,7 +104,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		case "3":
 			currentLinkLen = &linkLen3
 		default:
-			http.Error(w, errServerError, http.StatusInternalServerError)
+			logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: Invalid len argument.")
 			return
 		}
 
@@ -136,12 +129,12 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			formURL := r.Form.Get("url")
 			// simple sanity check to fail early, If len(formURL) is less than 11 it is definitely an invalid url.
 			if len(formURL) < 11 || !strings.HasPrefix(formURL, "http://") && !strings.HasPrefix(formURL, "https://") {
-				http.Error(w, "Invalid url, only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError)
+				logErrors(w, r, "Invalid url, only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
 				return
 			}
 			_, err = url.Parse(formURL)
 			if err != nil {
-				http.Error(w, "Invalid url", http.StatusInternalServerError)
+				logErrors(w, r, "Invalid url", http.StatusInternalServerError, "")
 				return
 			}
 			currentLinkLen.mutex.RLock()
@@ -162,17 +155,18 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
 				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				logErrors(w, r, errServerError, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			// TODO use template to make a better looking output, default template and optional templates for each domain
 			// Note that r.Host has been validated earlier
+			logOK(r, http.StatusOK)
 			fmt.Fprint(w, r.Host+"/"+key+" \n\nnow pointing to: \n\n"+html.EscapeString(origFormURL)+" \n\nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
 			return
 		case "text":
 			if lowRAM() {
-				http.Error(w, errLowRAM, http.StatusInternalServerError)
+				logErrors(w, r, errServerError, http.StatusInternalServerError, errLowRAM)
 				return
 			}
 			textBlob := r.Form.Get("text")
@@ -193,40 +187,49 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
 				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				logErrors(w, r, errServerError, http.StatusInternalServerError, err.Error())
 				return
 			}
 			// TODO use template to make a better looking output, default template and optional templates for each domain
 			// Note that r.Host has been validated earlier
+			logOK(r, http.StatusOK)
 			fmt.Fprint(w, r.Host+"/"+key+"\n\nwill now display the text that was submitted \n\nThis link and the data will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
 			return
 		case "file":
-			http.Error(w, errNotImplemented, http.StatusNotImplemented)
+			logErrors(w, r, errNotImplemented, http.StatusNotImplemented, "")
 			return
 		default:
-			http.Error(w, errServerError, http.StatusInternalServerError)
+			logErrors(w, r, errNotImplemented, http.StatusNotImplemented, "Error: Invalid requestType argument.")
 			return
 		}
 	}
 
 	// If the request is not handled previously redirect to index, note that Host has been validated earlier
+	logOK(r, http.StatusSeeOther)
 	http.Redirect(w, r, "https://"+r.Host, http.StatusSeeOther)
 }
 
 // handleGET will handle GET requests and redirect to the saved link for a key, return a saved textblob or return a file
 func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 	if !validRequest(r) {
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid request.")
 		return
 	}
 	if !validate(key) {
-		http.Error(w, errInvalidKey, http.StatusInternalServerError)
+		logErrors(w, r, errInvalidKey, http.StatusInternalServerError, "")
 		return
 	}
 	var showLink bool
 	if key[len(key)-1] == '~' {
 		key = key[:len(key)-1]
 		showLink = true
+	}
+
+	// start by checking static key map
+	if lnk, ok := config.StaticLinks[key]; ok {
+		logOK(r, http.StatusPermanentRedirect)
+		http.Redirect(w, r, lnk, http.StatusPermanentRedirect)
+		return
 	}
 
 	var lnk *link
@@ -255,6 +258,7 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 	switch lnk.linkType {
 	case "url":
 		if showLink {
+			logOK(r, http.StatusOK)
 			w.Header().Add("Content-Type", "text/plain")
 			fmt.Fprint(w, r.Host+"/"+key+"\n\nis pointing to \n\n"+html.EscapeString(lnk.data))
 			return
@@ -263,30 +267,34 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 			redirectToDecompressed(lnk, w, r)
 			return
 		}
+		logOK(r, http.StatusTemporaryRedirect)
 		http.Redirect(w, r, lnk.data, http.StatusTemporaryRedirect)
 		return
 	case "text":
 		w.Header().Add("Content-Type", "text/plain")
 		if showLink {
+			logOK(r, http.StatusOK)
 			fmt.Fprint(w, r.Host+"/"+key+"\n\nis pointing to a "+r.Host+" Text dump")
 			return
 		}
 		if lnk.isCompressed {
 			if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 				w.Header().Add("content-encoding", "gzip")
+				logOK(r, http.StatusOK)
 				fmt.Fprint(w, lnk.data)
 				return
 			}
-			returnDecompressed(lnk, w) // defined in misc.go
+			returnDecompressed(lnk, w, r) // defined in misc.go
 			return
 		}
+		logOK(r, http.StatusOK)
 		fmt.Fprint(w, lnk.data)
 		return
 	case "file":
-		http.Error(w, errNotImplemented, http.StatusNotImplemented)
+		logErrors(w, r, errNotImplemented, http.StatusInternalServerError, "")
 		return
 	default:
-		http.Error(w, errServerError, http.StatusInternalServerError)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "invalid LinkType "+lnk.linkType)
 	}
 }
 
