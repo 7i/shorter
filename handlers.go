@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -49,6 +48,12 @@ func handleRoot(mux *http.ServeMux) {
 func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.Template) {
 	if r == nil || indexTmpl == nil {
 		logErrors(w, r, errServerError, http.StatusInternalServerError, "error executing template.")
+		return
+	}
+
+	// quick check if request is quickAddURL request
+	if validURL(r.URL.RawQuery) {
+		quickAddURL(w, r, r.URL.RawQuery)
 		return
 	}
 
@@ -127,21 +132,16 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		switch requestType {
 		case "url":
 			formURL := r.Form.Get("url")
-			// simple sanity check to fail early, If len(formURL) is less than 11 it is definitely an invalid url.
-			if len(formURL) < 11 || !strings.HasPrefix(formURL, "http://") && !strings.HasPrefix(formURL, "https://") {
+			valid := validURL(formURL)
+			if !valid {
 				logErrors(w, r, "Invalid url, only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
-				return
-			}
-			_, err = url.Parse(formURL)
-			if err != nil {
-				logErrors(w, r, "Invalid url", http.StatusInternalServerError, "")
 				return
 			}
 			currentLinkLen.mutex.RLock()
 			currentLinkLenTimeout := currentLinkLen.timeout
 			currentLinkLen.mutex.RUnlock()
 
-			origFormURL = formURL
+			origFormURL := formURL
 			isCompressed := false
 			if len(formURL) > minSizeToGzip {
 				compressed, err := compress(formURL)
@@ -422,4 +422,47 @@ func handleRobots(mux *http.ServeMux) {
 		http.Error(w, errServerError, http.StatusInternalServerError)
 	}
 	mux.HandleFunc("/robots.txt", handleRobots)
+}
+
+func quickAddURL(w http.ResponseWriter, r *http.Request, url string) {
+	var urlLink *linkLen
+
+	w.Header().Add("Content-Type", "text/plain")
+
+	// Try to quickAddURL for first len 1, if all are full then try len 2 and lastly len 3
+	for i := 1; i <= 3; i++ {
+		switch i {
+		case 1:
+			urlLink = &linkLen1
+		case 2:
+			urlLink = &linkLen2
+		case 3:
+			urlLink = &linkLen3
+		default:
+		}
+
+		urlLink.mutex.RLock()
+		linkTimeout := urlLink.timeout
+		urlLink.mutex.RUnlock()
+
+		origURL := url
+		isCompressed := false
+		if len(url) > minSizeToGzip {
+			compressed, err := compress(url)
+			if err == nil && len(url) > len(compressed) {
+				url = compressed
+				isCompressed = true
+			}
+		}
+
+		newLink := &link{linkType: "url", data: url, isCompressed: isCompressed, times: -1, timeout: time.Now().Add(linkTimeout)}
+		key, err := urlLink.Add(newLink)
+		if err == nil {
+			logOK(r, http.StatusOK)
+			// TODO use template to make a better looking output, default template and optional templates for each domain
+			// Note that r.Host has been validated earlier
+			fmt.Fprint(w, r.Host+"/"+key+" \n\nnow pointing to: \n\n"+html.EscapeString(origURL)+" \n\nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+linkTimeout.String()+" from now)")
+			return
+		}
+	}
 }

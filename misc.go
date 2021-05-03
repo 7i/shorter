@@ -6,6 +6,7 @@ import (
 	"go/build"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -89,6 +90,18 @@ func validRequest(r *http.Request) bool {
 	}
 
 	return validHost && validType
+}
+
+func validURL(link string) bool {
+	// simple sanity check to fail early, If len(link) is less than 11 it is definitely an invalid url link.
+	if len(link) < 11 || !strings.HasPrefix(link, "http://") && !strings.HasPrefix(link, "https://") {
+		return false
+	}
+	_, err := url.Parse(link)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func lowRAM() bool {
