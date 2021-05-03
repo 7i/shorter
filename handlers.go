@@ -127,6 +127,8 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			}
 		}
 
+		w.Header().Add("Content-Type", "text/plain")
+
 		// Handle different request types
 		requestType := r.Form.Get("requestType")
 		switch requestType {
@@ -146,6 +148,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			currentLinkLenTimeout := currentLinkLen.timeout
 			currentLinkLen.mutex.RUnlock()
 
+			origFormURL = formURL
 			isCompressed := false
 			if len(formURL) > minSizeToGzip {
 				compressed, err := compress(formURL)
@@ -165,8 +168,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 
 			// TODO use template to make a better looking output, default template and optional templates for each domain
 			// Note that r.Host has been validated earlier
-
-			fmt.Fprint(w, r.Host+"/"+key+" \n\nnow pointing to: \n\n"+html.EscapeString(formURL)+" \n\nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
+			fmt.Fprint(w, r.Host+"/"+key+" \n\nnow pointing to: \n\n"+html.EscapeString(origFormURL)+" \n\nThis link will be removed "+newLink.timeout.UTC().Format(dateFormat)+" ("+currentLinkLenTimeout.String()+" from now)")
 			return
 		case "text":
 			if lowRAM() {
