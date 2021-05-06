@@ -33,7 +33,8 @@ shorter /path/to/config
    - [x] 2 chars long - 12h timeout
    - [x] 3 chars long - 30days timeout
    - [x] make timeouts configurable
-   - [ ] temporary word bindings (7i.se/coolthing)
+   - [x] temporary word bindings (7i.se/coolthing)
+   - [x] quick add link via get request with syntax 7i.se?https://example.com
    - [ ] optional removal of link after N accesses 
 - [x] Add functionality to print where a link is pointing by adding ~ at the end of the link e.g. 7i.se/a~ will display where 7i.se/a is pointing to 
 - [x] Add config file that specifies relevant options
