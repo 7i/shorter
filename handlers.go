@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -52,9 +53,14 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 	}
 
 	// quick check if request is quickAddURL request
-	if validURL(r.URL.RawQuery) {
-		quickAddURL(w, r, r.URL.RawQuery)
-		return
+	if r.Method == http.MethodGet {
+		if validURL(r.URL.RawQuery) {
+			quickAddURL(w, r, r.URL.RawQuery)
+			return
+		} else if len(r.URL.RawQuery) > 0 {
+			logErrors(w, r, "Invalid Quick Add URL request, please use \""+r.Host+"/?URLHERE\".\nAlso note that only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
+			return
+		}
 	}
 
 	// remove / from the beginning of url and remove any character after the key
@@ -94,7 +100,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 	if r.Method == http.MethodPost {
 		err := r.ParseMultipartForm(config.MaxFileSize)
 		if err != nil {
-			logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: "+err.Error())
+			logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: "+url.QueryEscape(err.Error()))
 			return
 		}
 
@@ -155,7 +161,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
 				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
-				logErrors(w, r, errServerError, http.StatusInternalServerError, err.Error())
+				logErrors(w, r, errServerError, http.StatusInternalServerError, url.QueryEscape(err.Error()))
 				return
 			}
 
@@ -234,19 +240,29 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 
 	var lnk *link
 	var ok bool
-	switch len(key) {
-	case 1:
+	switch keylen := len(key); {
+	case keylen == 1:
 		if lnk, ok = linkLen1.linkMap[key]; !ok {
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
-	case 2:
+	case keylen == 2:
 		if lnk, ok = linkLen2.linkMap[key]; !ok {
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
-	case 3:
+	case keylen == 3:
 		if lnk, ok = linkLen3.linkMap[key]; !ok {
+			http.Error(w, errInvalidKey, http.StatusInternalServerError)
+			return
+		}
+	case keylen > 3 && keylen < MaxKeyLen:
+		// only lookup key if the supplied key is a valid key
+		if validate(key) {
+			http.Error(w, errInvalidKey, http.StatusInternalServerError)
+			return
+		}
+		if lnk, ok = linkCustom.linkMap[key]; !ok {
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
@@ -260,7 +276,17 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 		if showLink {
 			logOK(r, http.StatusOK)
 			w.Header().Add("Content-Type", "text/plain")
-			fmt.Fprint(w, r.Host+"/"+key+"\n\nis pointing to \n\n"+html.EscapeString(lnk.data))
+			if lnk.isCompressed {
+				// key validated earlier to only contain characters from customKeyCharset when key is a custom key
+				decompressed, err := decompress(lnk.data)
+				if err != nil {
+					http.Error(w, errInvalidKey, http.StatusInternalServerError)
+					return
+				}
+				fmt.Fprint(w, r.Host+"/"+key+"\n\nis pointing to \n\n"+html.EscapeString(decompressed))
+			} else {
+				fmt.Fprint(w, r.Host+"/"+key+"\n\nis pointing to \n\n"+html.EscapeString(lnk.data))
+			}
 			return
 		}
 		if lnk.isCompressed {
@@ -294,7 +320,7 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 		logErrors(w, r, errNotImplemented, http.StatusInternalServerError, "")
 		return
 	default:
-		logErrors(w, r, errServerError, http.StatusInternalServerError, "invalid LinkType "+lnk.linkType)
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "invalid LinkType "+url.QueryEscape(lnk.linkType))
 	}
 }
 

@@ -21,7 +21,7 @@ func validate(s string) bool {
 	}
 
 	for _, char := range s {
-		if !strings.Contains(charset, string(char)) {
+		if !strings.Contains(customKeyCharset, string(char)) {
 			return false
 		}
 	}
@@ -49,6 +49,12 @@ func initLinkLens() {
 		linkMap: make(map[string]*link),
 		freeMap: make(map[string]bool),
 		timeout: config.Clear3Duration,
+	}
+
+	linkCustom = linkLen{
+		mutex:   sync.RWMutex{},
+		linkMap: make(map[string]*link),
+		timeout: config.ClearCustomLinksDuration,
 	}
 
 	linkLen1.mutex.Lock()
@@ -146,6 +152,21 @@ func compress(data string) (compressedData string, err error) {
 	return buf.String(), nil
 }
 
+func decompress(data string) (decompressedData string, err error) {
+	var buf bytes.Buffer
+	zw, err := gzip.NewReader(strings.NewReader(data))
+	if err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(&buf, zw); err != nil {
+		return "", err
+	}
+	if err := zw.Close(); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
 func redirectToDecompressed(lnk *link, w http.ResponseWriter, r *http.Request) {
 	if lnk == nil {
 		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid link in request to redirectToDecompressed().")
@@ -189,15 +210,16 @@ func returnDecompressed(lnk *link, w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// logErrors will write the error to the log file, note that the arguments errStr and logStr should be escaped correctly with url.QueryEscape() if any user data is included.
 func logErrors(w http.ResponseWriter, r *http.Request, errStr string, statusCode int, logStr string) {
 	if logger != nil {
-		logger.Println("Request:\nStatuscode:", statusCode, logStr, errStr, "\n", r.Host+r.RequestURI, "\n", r, logSep)
+		logger.Println("Request:\nStatuscode:", statusCode, logStr, errStr, "\n", url.QueryEscape(r.Host+r.RequestURI), "\n", r, logSep)
 	}
 	http.Error(w, errServerError, statusCode)
 }
 
 func logOK(r *http.Request, statusCode int) {
 	if logger != nil {
-		logger.Println("Request:\nStatuscode:", statusCode, "\n", r.Host+r.RequestURI, "\n", r, logSep)
+		logger.Println("Request:\nStatuscode:", statusCode, "\n", url.QueryEscape(r.Host+r.RequestURI), "\n", r, logSep)
 	}
 }

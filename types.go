@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"sync"
@@ -37,6 +38,10 @@ type Config struct {
 	Clear2Duration time.Duration `yaml:"Clear2Duration"`
 	// Clear3Duration, same as Clear1Duration bur for 3 character long URLs
 	Clear3Duration time.Duration `yaml:"Clear3Duration"`
+	// ClearCustomLinksDuration, same as Clear1Duration bur for custom URLs
+	ClearCustomLinksDuration time.Duration `yaml:"ClearCustomLinksDuration"`
+	// MaxCustomLinks, sets the maximum number of active CustomLinks before reporting that all are used up
+	MaxCustomLinks int `yaml:"MaxCustomLinks"`
 	// MaxFileSize specifies the maximum filesize when uploading temporary files
 	MaxFileSize int64 `yaml:"MaxFileSize"`
 	// MaxDiskUsage specifies how much space in total shorter is allowed to save ondisk
@@ -68,12 +73,13 @@ type linkLen struct {
 	mutex     sync.RWMutex
 	linkMap   map[string]*link
 	freeMap   map[string]bool
+	links     int
 	nextClear *link // first element in linked list
 	endClear  *link // last element in linked list
 	timeout   time.Duration
 }
 
-// Add adds the value lnk with a new key to linkMap and removes the same key from freeMap and returns the key used or an error, note that the error should be useful for the user while not leak server information
+// Add adds the value lnk with a new key if no key is provided to linkMap and removes the same key from freeMap if freeMap is used and returns the key used or an error, note that the error should be useful for the user while not leak server information
 func (l *linkLen) Add(lnk *link) (key string, err error) {
 	if lnk == nil {
 		if logger != nil {
@@ -85,13 +91,36 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
+	// check if lnk is a custum link
+	isCustomLink := false
+	if l.freeMap == nil {
+		if len(lnk.key) < 4 || len(lnk.key) > MaxKeyLen || !validate(lnk.key) {
+			logger.Println("AddKey: invalid parameter key, key can only be > 4 or < "+strconv.Itoa(MaxKeyLen), logSep)
+			return "", errors.New("Error: key can only be of length > 4 and < " + strconv.Itoa(MaxKeyLen) + " and only use the folowing characters:\n" + customKeyCharset)
+		}
+		isCustomLink = true
+	}
+
 	// Formated output for the log
 	logstr := ""
 
 	if logger != nil {
-		logstr = "lnk:\n   linkType: " + lnk.linkType + "\n   data: " + url.QueryEscape(lnk.data) + "\n   timeout: " + lnk.timeout.UTC().Format(dateFormat) + "\n   xTimes: " + strconv.Itoa(lnk.times)
+		if lnk.isCompressed {
+			decompressed, err := decompress(lnk.data)
+			if err != nil {
+				logger.Println("Error while decompressing lnk.data")
+				return "", errors.New(errServerError)
+			}
+			logstr = "lnk:\n   linkType: " + lnk.linkType + "\n   data: " + url.QueryEscape(decompressed) + "\n   timeout: " + lnk.timeout.UTC().Format(dateFormat) + "\n   xTimes: " + strconv.Itoa(lnk.times)
+		} else {
+			logstr = "lnk:\n   linkType: " + lnk.linkType + "\n   data: " + url.QueryEscape(lnk.data) + "\n   timeout: " + lnk.timeout.UTC().Format(dateFormat) + "\n   xTimes: " + strconv.Itoa(lnk.times)
+		}
 		logger.Println("Starting to Add", logstr)
-		logger.Println("len(l.freeMap):", len(l.freeMap))
+		if isCustomLink {
+			logger.Println("l.links:", l.links)
+		} else {
+			logger.Println("len(l.freeMap):", len(l.freeMap))
+		}
 		if l.endClear != nil {
 			logger.Println("lnk.timeout:", lnk.timeout.UTC().Format(dateFormat), "l.endClear.timeout:", l.endClear.timeout.UTC().Format(dateFormat))
 		} else {
@@ -99,11 +128,15 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		}
 	}
 
-	if len(l.freeMap) == 0 {
+	if !isCustomLink && len(l.freeMap) == 0 || isCustomLink && l.links >= config.MaxCustomLinks {
 		if logger != nil {
 			logger.Println("Error: No keys left", logSep)
 		}
-		return "", errors.New("No keys left for key length " + strconv.Itoa(len(l.endClear.key)))
+		if isCustomLink {
+			return "", errors.New("No custom links left")
+		} else {
+			return "", errors.New("No keys left for key length " + strconv.Itoa(len(l.endClear.key)))
+		}
 	}
 	if time.Since(lnk.timeout) > 0 {
 		if logger != nil {
@@ -111,36 +144,45 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		}
 		return "", errors.New(errServerError)
 	}
-	for key = range l.freeMap {
+	// if we are adding a specific lenghth key, get the next free key from l.freeMap
+	if !isCustomLink {
+		for key = range l.freeMap {
+			break
+		}
 		if logger != nil {
 			logger.Println("Picking key:", key)
 		}
 		lnk.key = key
-		if l.nextClear == nil {
-			l.nextClear = lnk
-		} else {
-			if l.endClear == nil {
-				if logger != nil {
-					logger.Println("Error", logstr, "endClear is nil but nextClear is set to a value", logSep)
-				}
-				return "", errors.New(errServerError)
-			}
-			if l.endClear.timeout.Sub(lnk.timeout) > 0 {
-				if logger != nil {
-					logger.Println("Error", logstr, "timeout has to be after the previous links timeout", logSep)
-				}
-				return "", errors.New(errServerError)
-			}
-			l.endClear.nextClear = lnk
-		}
-		l.endClear = lnk
-		l.linkMap[key] = lnk
-		delete(l.freeMap, key)
-		if logger != nil {
-			logger.Println("Finished adding key:", key, "with", logstr, "\nl.nextClear.key", l.nextClear.key, "\nl.endClear.key", l.endClear.key, logSep)
-		}
-		return key, nil
 	}
+
+	if l.nextClear == nil {
+		l.nextClear = lnk
+	} else {
+		if l.endClear == nil {
+			if logger != nil {
+				logger.Println("Error", logstr, "endClear is nil but nextClear is set to a value", logSep)
+			}
+			return "", errors.New(errServerError)
+		}
+		if l.endClear.timeout.Sub(lnk.timeout) > 0 {
+			if logger != nil {
+				logger.Println("Error", logstr, "timeout has to be after the previous links timeout", logSep)
+			}
+			return "", errors.New(errServerError)
+		}
+		l.endClear.nextClear = lnk
+	}
+	l.endClear = lnk
+	l.linkMap[key] = lnk
+	if isCustomLink {
+		l.links++
+	} else {
+		delete(l.freeMap, key)
+	}
+	if logger != nil {
+		logger.Println("Finished adding key:", url.QueryEscape(key), "with", logstr, "\nl.nextClear.key", url.QueryEscape(l.nextClear.key), "\nl.endClear.key", url.QueryEscape(l.endClear.key), logSep)
+	}
+	return key, nil
 	return
 }
 
@@ -178,14 +220,24 @@ func (l *linkLen) TimeoutManager() {
 				l.endClear = nil
 			} else {
 				if logger != nil {
-					logger.Println("ERROR: invalid state, if l.nextClear.nextClear == nil then l.nextClear has to be equal to l.endClear\nlinkMap:", l.linkMap, "\nfreeMap:", l.freeMap, "\nnextClear:", l.nextClear, "\nendClear:", l.endClear, logSep)
+					logger.Println("ERROR: invalid state, if l.nextClear.nextClear == nil then l.nextClear has to be equal to l.endClear\nlinkMap:", url.QueryEscape(fmt.Sprint(l.linkMap)), "\nfreeMap:", url.QueryEscape(fmt.Sprint(l.freeMap)), "\nnextClear:", url.QueryEscape(fmt.Sprint(l.nextClear)), "\nendClear:", url.QueryEscape(fmt.Sprint(l.endClear)), logSep)
 				}
 			}
 			delete(l.linkMap, keyToClear)
-			l.freeMap[keyToClear] = true
-			if logger != nil {
-				logger.Println("Finished clearing nextClear of length:", len(keyToClear), "\ncurrently using:", len(l.linkMap), "keys\ncurrent free keys:", len(l.freeMap), logSep)
+			if l.freeMap != nil {
+				// Links of specific length
+				l.freeMap[keyToClear] = true
+				if logger != nil {
+					logger.Println("Finished clearing nextClear of length:", len(keyToClear), "\ncurrently using:", len(l.linkMap), "keys\ncurrent free keys:", len(l.freeMap), logSep)
+				}
+			} else {
+				// Custom links
+				l.links--
+				if logger != nil {
+					logger.Println("Finished clearing nextClear for custom link\ncurrently using:", l.links, "keys\ncurrent free keys:", config.MaxCustomLinks-l.links, logSep)
+				}
 			}
+
 			l.mutex.Unlock()
 			l.mutex.RLock()
 		}

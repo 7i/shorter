@@ -9,6 +9,8 @@ import (
 const (
 	// charset consists of alphanumeric characters with some characters removed due to them being to similar in some fonts.
 	charset = "abcdefghijkmnopqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+	// charset consists of characters that are valid for custom keys.
+	customKeyCharset = "abcdefghijklmnopqrstuvwxyzåäö0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ-_"
 	// dateFormat specifies the format in which date and time is represented.
 	dateFormat = "Mon 2006-01-02 15:04 MST"
 	// logSep sets the separator between log entrys in the log file, only used for aesthetics purposes.
@@ -22,15 +24,18 @@ const (
 	errLowRAM         = "No Space available, new space will be available as old links become invalid"
 	// Do not try to gzip data that is less than minSizeToGzip
 	minSizeToGzip = 128
+	// Max key length for custom links
+	MaxKeyLen = 64
 )
 
 var (
 	// Server config variable
 	config Config
-	// linkLen1, linkLen2 and linkLen3 will contain all data related to their respective key length.
-	linkLen1 linkLen
-	linkLen2 linkLen
-	linkLen3 linkLen
+	// linkLen1, linkLen2 and linkLen3 will contain all data related to their respective key length and linkCustom will contain all data related to custom keys.
+	linkLen1   linkLen
+	linkLen2   linkLen
+	linkLen3   linkLen
+	linkCustom linkLen
 	// If we want to log errors logger will write these to a file specified in the config
 	logger *log.Logger
 	//
