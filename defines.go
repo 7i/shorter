@@ -18,10 +18,12 @@ const (
 	// TODO, add secure log entrys (generate seperator from sha256(key+time+lognr) and/or header for all entrys with lenght specified and/or signed log entrys so we can verify all entrys.)
 	logSep = "\n---\n"
 	// errServerError contains the generic error message users will se when somthing goes wrong
-	errServerError    = "Internal Server Error"
-	errInvalidKey     = "Invalid key"
-	errNotImplemented = "Not Implemented"
-	errLowRAM         = "No Space available, new space will be available as old links become invalid"
+	errServerError      = "Internal Server Error"
+	errInvalidKey       = "Invalid key"
+	errInvalidKeyUsed   = "Invalid key, key is already in use"
+	errInvalidCustomKey = "Invalid Custom Key was provided, valid characters are:\n" + customKeyCharset
+	errNotImplemented   = "Not Implemented"
+	errLowRAM           = "No Space available, new space will be available as old links become invalid"
 	// Do not try to gzip data that is less than minSizeToGzip
 	minSizeToGzip = 128
 	// Max key length for custom links

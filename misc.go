@@ -16,6 +16,10 @@ import (
 
 // validate validates if string s contains only characters in charset. validate is not a crypto related function so no need for constant time
 func validate(s string) bool {
+	if len(s) == 0 {
+		return true
+	}
+
 	if s[len(s)-1] == '~' {
 		s = s[:len(s)-1]
 	}

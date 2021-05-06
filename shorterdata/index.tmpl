@@ -23,12 +23,18 @@
          </div>
          <form id="shortener" method="POST" enctype="multipart/form-data">
             <div class="radio-box">
-               <input type="radio" name="len" value="1" checked>
+               <input type="radio" name="len" id="hideCustomKey1" value="1" checked>
                <label for="len">Length 1: valid for 10min</label>
-               <input type="radio" name="len" value="2">
+               <input type="radio" name="len" id="hideCustomKey2" value="2">
                <label for="len">Length 2: valid for 12h</label>
-               <input type="radio" name="len" value="3">
+               <input type="radio" name="len" id="hideCustomKey3" value="3">
                <label for="len">Length 3: valid for 30days</label>
+               <input type="radio" name="len" id="showCustomKey" value="custom">
+               <label for="len">Custom key (4-64 chars): valid for 7days</label>
+               <div id="customDiv">
+                  <span>Custom key:</span>
+                  <input type="text" name="custom" class="inputbox" placeholder="Your Custom Key Here">
+               </div>
             </div>
             <div class="radio-box">
                <input type="radio" name="requestType" id="showURL" value="url" checked>

@@ -58,7 +58,7 @@ body {
     .content {
         margin: 1em auto;
     }
-    
+
     #shortener, .info {
         padding: 1em;
     }
@@ -127,6 +127,7 @@ input[type="file"] {
     display: none;
 }
 
+
 #urlDiv,
 #fileDiv,
 #textDiv {
@@ -140,5 +141,17 @@ input[type="file"] {
 input[id="showURL"]:checked ~ #urlDiv,
 input[id="showText"]:checked ~ #textDiv,
 input[id="showFile"]:checked ~ #fileDiv {
+    display: grid;
+}
+
+#customDiv {
+    display: none;
+    grid-column: span 2;
+    margin: 1em 0;
+    gap: 0.5em;
+    grid-template-columns: 100%;
+}
+
+input[id="showCustomKey"]:checked ~ #customDiv {
     display: grid;
 }

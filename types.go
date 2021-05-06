@@ -102,11 +102,6 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		key = lnk.key
 	}
 
-	//debug
-	fmt.Println("isCustomLink:", isCustomLink)
-	fmt.Println("lnk.key:", lnk.key)
-	//debug
-
 	// Formated output for the log
 	logstr := ""
 
@@ -133,10 +128,6 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 			logger.Println("lnk.timeout:", lnk.timeout.UTC().Format(dateFormat), "l.endClear is nil, will set it to lnk if no other errors occur")
 		}
 	}
-
-	//debug
-	fmt.Println("config.MaxCustomLinks", config.MaxCustomLinks)
-	//debug
 
 	if (!isCustomLink && len(l.freeMap) == 0) || (isCustomLink && l.links >= config.MaxCustomLinks) {
 		if logger != nil {

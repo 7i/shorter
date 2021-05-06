@@ -71,19 +71,16 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		return
 	}
 
-	// debug
-	fmt.Println("key", key)
-	fmt.Println("r.URL.RawQuery", r.URL.RawQuery)
-	// debug
-
 	// quick check if request is quickAddURL request
 	if r.Method == http.MethodGet {
-		if len(r.URL.RawQuery) > 0 && validURL(r.URL.RawQuery) {
-			quickAddURL(w, r, r.URL.RawQuery, key)
-			return
-		} else {
-			logErrors(w, r, "Invalid Quick Add URL request, please use the following syntax: \""+r.Host+"?http://example.com/\". where http://example.com/ is your link.\nAlso note that only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
-			return
+		if len(r.URL.RawQuery) > 0 {
+			if validURL(r.URL.RawQuery) {
+				quickAddURL(w, r, r.URL.RawQuery, key)
+				return
+			} else {
+				logErrors(w, r, "Invalid Quick Add URL request, please use the following syntax: \""+r.Host+"?http://example.com/\". where http://example.com/ is your link.\nAlso note that only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
+				return
+			}
 		}
 	}
 
@@ -131,6 +128,8 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			currentLinkLen = &linkLen2
 		case "3":
 			currentLinkLen = &linkLen3
+		case "custom":
+			currentLinkLen = &linkCustom
 		default:
 			logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: Invalid len argument.")
 			return
@@ -149,6 +148,20 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		}
 
 		w.Header().Add("Content-Type", "text/plain")
+
+		// Check if request is a custom key request and report error if it is invalid
+		customKey := ""
+		if length == "custom" {
+			customKey = r.Form.Get("custom")
+			if !validate(customKey) || len(customKey) < 4 || len(customKey) > MaxKeyLen {
+				logErrors(w, r, errInvalidCustomKey, http.StatusInternalServerError, "")
+				return
+			}
+			if _, used := linkCustom.linkMap[customKey]; used {
+				http.Error(w, errInvalidKeyUsed, http.StatusInternalServerError)
+				return
+			}
+		}
 
 		// Handle different request types
 		requestType := r.Form.Get("requestType")
@@ -174,7 +187,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 				}
 			}
 
-			newLink := &link{linkType: "url", data: formURL, isCompressed: isCompressed, times: xTimes, timeout: time.Now().Add(currentLinkLenTimeout)}
+			newLink := &link{key: customKey, linkType: "url", data: formURL, isCompressed: isCompressed, times: xTimes, timeout: time.Now().Add(currentLinkLenTimeout)}
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
 				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
@@ -206,7 +219,7 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 			currentLinkLen.mutex.RLock()
 			currentLinkLenTimeout := currentLinkLen.timeout
 			currentLinkLen.mutex.RUnlock()
-			newLink := &link{linkType: "text", data: textBlob, isCompressed: isCompressed, times: xTimes, timeout: time.Now().Add(currentLinkLenTimeout)}
+			newLink := &link{key: customKey, linkType: "text", data: textBlob, isCompressed: isCompressed, times: xTimes, timeout: time.Now().Add(currentLinkLenTimeout)}
 			key, err := currentLinkLen.Add(newLink)
 			if err != nil {
 				// if logging is enabled then logs have already been written from the Add method. Note that the Add method should only return errors that are useful for the user while not leak server information.
@@ -272,7 +285,7 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 		}
 	case keylen > 3 && keylen < MaxKeyLen:
 		// only lookup key if the supplied key is a valid key
-		if validate(key) {
+		if !validate(key) {
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
@@ -479,15 +492,13 @@ func quickAddURL(w http.ResponseWriter, r *http.Request, url, key string) {
 		switch i {
 		case 0:
 			if key == "" {
-				//debug
-				fmt.Println("skipping linkCustom as no valid key was provided")
-				//debug
 				continue
 			}
-			//debug
-			fmt.Println("using linkCustom as a valid key was provided, key: ", key)
-			//debug
 			urlLink = &linkCustom
+			if _, used := urlLink.linkMap[key]; used {
+				http.Error(w, errInvalidKeyUsed, http.StatusInternalServerError)
+				return
+			}
 		case 1:
 			urlLink = &linkLen1
 		case 2:
