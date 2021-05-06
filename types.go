@@ -94,12 +94,18 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 	// check if lnk is a custum link
 	isCustomLink := false
 	if l.freeMap == nil {
-		if len(lnk.key) < 4 || len(lnk.key) > MaxKeyLen || !validate(lnk.key) {
+		if len(lnk.key) < 4 || len(lnk.key) >= MaxKeyLen || !validate(lnk.key) {
 			logger.Println("AddKey: invalid parameter key, key can only be > 4 or < "+strconv.Itoa(MaxKeyLen), logSep)
 			return "", errors.New("Error: key can only be of length > 4 and < " + strconv.Itoa(MaxKeyLen) + " and only use the folowing characters:\n" + customKeyCharset)
 		}
 		isCustomLink = true
+		key = lnk.key
 	}
+
+	//debug
+	fmt.Println("isCustomLink:", isCustomLink)
+	fmt.Println("lnk.key:", lnk.key)
+	//debug
 
 	// Formated output for the log
 	logstr := ""
@@ -128,7 +134,11 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		}
 	}
 
-	if !isCustomLink && len(l.freeMap) == 0 || isCustomLink && l.links >= config.MaxCustomLinks {
+	//debug
+	fmt.Println("config.MaxCustomLinks", config.MaxCustomLinks)
+	//debug
+
+	if (!isCustomLink && len(l.freeMap) == 0) || (isCustomLink && l.links >= config.MaxCustomLinks) {
 		if logger != nil {
 			logger.Println("Error: No keys left", logSep)
 		}
@@ -183,7 +193,6 @@ func (l *linkLen) Add(lnk *link) (key string, err error) {
 		logger.Println("Finished adding key:", url.QueryEscape(key), "with", logstr, "\nl.nextClear.key", url.QueryEscape(l.nextClear.key), "\nl.endClear.key", url.QueryEscape(l.endClear.key), logSep)
 	}
 	return key, nil
-	return
 }
 
 // TimeoutHandler removes links from its linkMap when the links have timed out. Start TimeoutHandler in a separate gorutine and only start one TimeoutHandler() per linkLen.

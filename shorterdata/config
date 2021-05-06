@@ -11,6 +11,8 @@ Clear1Duration: "10m"
 Clear2Duration: "12h"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 3 characters
 Clear3Duration:  "720h"
+# ClearCustomLinksDuration, same as Clear1Duration bur for custom URLs
+ClearCustomLinksDuration: "168h"
 # Max filesize when uploading temporary files
 MaxFileSize: 10000000 # 10MB
 # Maximum disk usage that shorter is allowd to use
@@ -19,6 +21,8 @@ MaxDiskUsage: 1000000000000 # 1TB
 MaxRAM: 1000000000 # 1GB
 # LinkAccessMaxNr specifies how many times a link is allowed to be accessed if xTimes is specified in the request
 LinkAccessMaxNr: 100000
+# MaxCustomLinks, sets the maximum number of active CustomLinks before reporting that all are used up
+MaxCustomLinks: 100000
 
 ## OPTIONAL Parameters
 

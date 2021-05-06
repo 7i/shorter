@@ -52,22 +52,39 @@ func handleRequests(w http.ResponseWriter, r *http.Request, indexTmpl *template.
 		return
 	}
 
-	// quick check if request is quickAddURL request
-	if r.Method == http.MethodGet {
-		if validURL(r.URL.RawQuery) {
-			quickAddURL(w, r, r.URL.RawQuery)
-			return
-		} else if len(r.URL.RawQuery) > 0 {
-			logErrors(w, r, "Invalid Quick Add URL request, please use \""+r.Host+"/?URLHERE\".\nAlso note that only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
-			return
-		}
+	// browsers should send a path that begins with a /
+	if r.URL.Path[0] != '/' {
+		logErrors(w, r, errServerError, http.StatusInternalServerError, "")
+		return
 	}
 
 	// remove / from the beginning of url and remove any character after the key
 	key := r.URL.Path[1:]
-	extradataindex := strings.IndexAny(key, "/?")
+	extradataindex := strings.IndexAny(key, "/")
 	if extradataindex >= 0 {
 		key = key[:extradataindex]
+	}
+
+	// verify that key only consists of valid characters
+	if !validate(key) {
+		logErrors(w, r, errInvalidKey, http.StatusInternalServerError, "")
+		return
+	}
+
+	// debug
+	fmt.Println("key", key)
+	fmt.Println("r.URL.RawQuery", r.URL.RawQuery)
+	// debug
+
+	// quick check if request is quickAddURL request
+	if r.Method == http.MethodGet {
+		if len(r.URL.RawQuery) > 0 && validURL(r.URL.RawQuery) {
+			quickAddURL(w, r, r.URL.RawQuery, key)
+			return
+		} else {
+			logErrors(w, r, "Invalid Quick Add URL request, please use the following syntax: \""+r.Host+"?http://example.com/\". where http://example.com/ is your link.\nAlso note that only \"http://\" and \"https://\" url schemes are allowed.", http.StatusInternalServerError, "")
+			return
+		}
 	}
 
 	// Return Index page if GET request without a key
@@ -221,10 +238,7 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 		logErrors(w, r, errServerError, http.StatusInternalServerError, "Error: invalid request.")
 		return
 	}
-	if !validate(key) {
-		logErrors(w, r, errInvalidKey, http.StatusInternalServerError, "")
-		return
-	}
+
 	var showLink bool
 	if key[len(key)-1] == '~' {
 		key = key[:len(key)-1]
@@ -450,14 +464,30 @@ func handleRobots(mux *http.ServeMux) {
 	mux.HandleFunc("/robots.txt", handleRobots)
 }
 
-func quickAddURL(w http.ResponseWriter, r *http.Request, url string) {
+func quickAddURL(w http.ResponseWriter, r *http.Request, url, key string) {
 	var urlLink *linkLen
 
 	w.Header().Add("Content-Type", "text/plain")
 
+	// Remove keys of invalid size, note that key has been validated to only contain valid characters previously
+	if len(key) <= 3 || len(key) >= MaxKeyLen {
+		key = ""
+	}
+
 	// Try to quickAddURL for first len 1, if all are full then try len 2 and lastly len 3
-	for i := 1; i <= 3; i++ {
+	for i := 0; i <= 3; i++ {
 		switch i {
+		case 0:
+			if key == "" {
+				//debug
+				fmt.Println("skipping linkCustom as no valid key was provided")
+				//debug
+				continue
+			}
+			//debug
+			fmt.Println("using linkCustom as a valid key was provided, key: ", key)
+			//debug
+			urlLink = &linkCustom
 		case 1:
 			urlLink = &linkLen1
 		case 2:
@@ -481,7 +511,7 @@ func quickAddURL(w http.ResponseWriter, r *http.Request, url string) {
 			}
 		}
 
-		newLink := &link{linkType: "url", data: url, isCompressed: isCompressed, times: -1, timeout: time.Now().Add(linkTimeout)}
+		newLink := &link{key: key, linkType: "url", data: url, isCompressed: isCompressed, times: -1, timeout: time.Now().Add(linkTimeout)}
 		key, err := urlLink.Add(newLink)
 		if err == nil {
 			logOK(r, http.StatusOK)
