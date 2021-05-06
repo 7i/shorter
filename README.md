@@ -29,12 +29,13 @@ shorter /path/to/config
 
 ## TODO
 - [x] Implement shortening of URLs
-   - [x] 1 char long - 10min timeout
-   - [x] 2 chars long - 12h timeout
-   - [x] 3 chars long - 30days timeout
+   - [x] 1 char long - configurabe timeout
+   - [x] 2 chars long - configurabe timeout
+   - [x] 3 chars long - configurabe timeout
    - [x] make timeouts configurable
-   - [x] temporary word bindings (7i.se/coolthing)
+   - [x] temporary word bindings (7i.se/coolthing) 
    - [x] quick add link via get request with syntax 7i.se?https://example.com
+   - [x] quick add word bindings link via get request with syntax 7i.se/coolthing?https://example.com where coolthing is the key 
    - [ ] optional removal of link after N accesses
 - [x] Add functionality to print where a link is pointing by adding ~ at the end of the link e.g. 7i.se/a~ will display where 7i.se/a is pointing to
 - [x] Add config file that specifies relevant options
