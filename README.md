@@ -32,7 +32,9 @@ A deployed version of shorter is accessable at [7i.se](http://7i.se)
 
 create a temporary link to "https://www.example.com" via a GET request that is as short as possible:
 ```bash
-7i.se/https://www.example.com
+7i.se?https://www.example.com
+or
+7i.se/?https://www.example.com
 ```
 create a temporary link to "https://www.example.com" via a GET request using the key "KeyToExample":
 ```bash
