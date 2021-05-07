@@ -27,15 +27,29 @@ go get github.com/7i/shorter
 shorter /path/to/config
 ```
 
+## Examples
+A deployed version of shorter is accessable at [7i.se](http://7i.se)
+
+create a temporary link to "https://www.example.com" via a GET request that is as short as possible:
+```bash
+7i.se/https://www.example.com
+```
+create a temporary link to "https://www.example.com" via a GET request using the key "KeyToExample":
+```bash
+7i.se/KeyToExample?https://www.example.com
+or
+7i.se/KeyToExample/?https://www.example.com
+```
+
 ## TODO
 - [x] Implement shortening of URLs
    - [x] 1 char long - configurabe timeout
    - [x] 2 chars long - configurabe timeout
    - [x] 3 chars long - configurabe timeout
    - [x] make timeouts configurable
-   - [x] temporary word bindings (7i.se/coolthing) 
+   - [x] temporary word bindings (7i.se/coolthing)
    - [x] quick add link via get request with syntax 7i.se?https://example.com
-   - [x] quick add word bindings link via get request with syntax 7i.se/coolthing?https://example.com where coolthing is the key 
+   - [x] quick add word bindings link via get request with syntax 7i.se/coolthing?https://example.com where coolthing is the key
    - [ ] optional removal of link after N accesses
 - [x] Add functionality to print where a link is pointing by adding ~ at the end of the link e.g. 7i.se/a~ will display where 7i.se/a is pointing to
 - [x] Add config file that specifies relevant options
