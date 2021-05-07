@@ -269,30 +269,42 @@ func handleGET(w http.ResponseWriter, r *http.Request, key string) {
 	var ok bool
 	switch keylen := len(key); {
 	case keylen == 1:
+		linkLen1.mutex.RLock()
 		if lnk, ok = linkLen1.linkMap[key]; !ok {
+			linkLen1.mutex.RUnlock()
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
+		linkLen1.mutex.RUnlock()
 	case keylen == 2:
+		linkLen2.mutex.RLock()
 		if lnk, ok = linkLen2.linkMap[key]; !ok {
+			linkLen1.mutex.RUnlock()
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
+		linkLen2.mutex.RUnlock()
 	case keylen == 3:
+		linkLen3.mutex.RLock()
 		if lnk, ok = linkLen3.linkMap[key]; !ok {
+			linkLen3.mutex.RUnlock()
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
+		linkLen3.mutex.RUnlock()
 	case keylen > 3 && keylen < MaxKeyLen:
 		// only lookup key if the supplied key is a valid key
 		if !validate(key) {
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
+		linkCustom.mutex.RLock()
 		if lnk, ok = linkCustom.linkMap[key]; !ok {
+			linkCustom.mutex.RUnlock()
 			http.Error(w, errInvalidKey, http.StatusInternalServerError)
 			return
 		}
+		linkCustom.mutex.RUnlock()
 	default:
 		http.Error(w, errInvalidKey, http.StatusInternalServerError)
 		return
