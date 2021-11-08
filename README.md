@@ -60,7 +60,7 @@ or
    - [ ] File encryption with AES-GCM
    - [x] Random human-readable password made in Diceware style via JavaScript (dictionary words not dice rolls)
 - [x] Move to ssl with Let's Encrypt
-- [ ] Save all active links in a database file so we can resume the server state if the server needs to restart
+- [ ] Save all active links in a database file instead of gob files 
 - [ ] Add support for subdomains with diffrent configs e.g. d1.7i.se
    - [ ] Add password/client cert protected subdomain management e.g. d1.7i.se/admin
    - [ ] Let the user managing a subdomain specify generic links and set timeouts, including "no timeout" for the shortened links, text-blobs and files.
