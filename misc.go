@@ -121,6 +121,9 @@ func lowRAM() bool {
 }
 
 func findFolderDefaultLocations(folder string) (path string) {
+	if _, err := os.Stat(filepath.Join("/7i", folder)); !os.IsNotExist(err) {
+		return filepath.Join("/7i", folder)
+	}
 	if _, err := os.Stat(filepath.Join(".", folder)); !os.IsNotExist(err) {
 		return filepath.Join(".", folder)
 	}

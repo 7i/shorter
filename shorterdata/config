@@ -3,8 +3,16 @@
 DomainNames:
   - "127.0.0.1:8080"
   - "localhost:8080"
+  - "192.168.1.2:8080"
+  - "eggos:8080"
+  - "10.0.2.2:8080"
+  - "127.0.0.1:8081"
+  - "localhost:8081"
+  - "192.168.1.2:8081"
+  - "eggos:8081"
+  - "10.0.2.2:8081"
 # AddressPort specifies the adress and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
-AddressPort: "127.0.0.1:8080"
+AddressPort: ":8080"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
 Clear1Duration: "10m"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 2 characters

@@ -13,6 +13,9 @@ import (
 )
 
 func main() {
+	// mount "/7i/shorterdata"
+	MountShorterData()
+
 	var conf []byte
 	var err error
 	// accept if we specify the path to the config directly without a flag, e.g. shorter /path/to/config
