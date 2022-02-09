@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -68,7 +69,8 @@ func main() {
 			logger = nil
 		}
 		defer f.Close()
-		logger = log.New(f, "shorter ", log.LstdFlags)
+		w := io.MultiWriter(f, os.Stderr)
+		logger = log.New(w, "shorter ", log.LstdFlags)
 	}
 
 	// Set up DB file so we can resume state if server goes down
