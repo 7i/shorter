@@ -56,28 +56,23 @@ or
 - [x] Add functionality to print where a link is pointing by adding ~ at the end of the link e.g. 7i.se/a~ will display where 7i.se/a is pointing to
 - [x] Add config file that specifies relevant options
 - [x] Pastebin functionality with same timeouts as above
-- [ ] Temporary file upload
-   - [ ] File encryption with AES-GCM
-   - [x] Random human-readable password made in Diceware style via JavaScript (dictionary words not dice rolls)
 - [x] Move to ssl with Let's Encrypt
 - [ ] Save all active links in a database file instead of gob files 
 - [ ] Add support for subdomains with diffrent configs e.g. d1.7i.se
    - [ ] Add password/client cert protected subdomain management e.g. d1.7i.se/admin
    - [ ] Let the user managing a subdomain specify generic links and set timeouts, including "no timeout" for the shortened links, text-blobs and files.
-- [ ] Enable CSP
-   - [ ] Move all js and css to seperate files and modify html/template files to use these
+- [x] Enable CSP
+   - [x] Move all js and css to seperate files and modify html/template files to use these
    - [ ] Setup a CSP report collector
-   - [ ] setup nonce for all scripts and css files
 - [ ] Use blocklists for known malware sites, integrate with:
    - [ ] https://www.stopbadware.org/firefox
    - [ ] https://www.malwaredomainlist.com
    - [ ] https://isc.sans.edu/suspicious_domains.html
    - [ ] https://zeltser.com/malicious-ip-blocklists/
    - [ ] if linking to a page that redirects, follow redirects only for 5 levels and display error if redirected more times
-- [ ] Check entropy, beginning and end of uploaded file as a sanity check to verifiy that the file is encrypted.
 - [ ] Include report form to take down links that breaks terms of usage
    - [ ] implement capcha for submitting reports to take down links
-- [ ] Create Terms of usage
+- [x] Create Terms of usage
 
 
 ## License
