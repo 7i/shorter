@@ -1,6 +1,6 @@
-module shorter
+module github.com/7i/shorter
 
-go 1.16
+go 1.17
 
 require (
 	github.com/kr/pretty v0.3.1
