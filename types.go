@@ -117,9 +117,9 @@ func (l *LinkLen) Add(lnk *Link) (key string, err error) {
 	// check if lnk is a custom link, FreeMap is nill for custom links
 	isCustomLink := false
 	if l.FreeMap == nil {
-		if len(lnk.Key) < 4 || len(lnk.Key) >= MaxKeyLen || !validate(lnk.Key) {
-			logger.Println("AddKey: invalid parameter key, key can only be > 4 or < " + strconv.Itoa(MaxKeyLen))
-			return "", errors.New("Error: key can only be of length > 4 and < " + strconv.Itoa(MaxKeyLen) + " and only use the following characters:\n" + customKeyCharset)
+		if len(lnk.Key) < 4 || len(lnk.Key) >= maxKeyLen || !validate(lnk.Key) {
+			logger.Println("AddKey: invalid parameter key, key can only be > 4 or < " + strconv.Itoa(maxKeyLen))
+			return "", errors.New("Error: key can only be of length > 4 and < " + strconv.Itoa(maxKeyLen) + " and only use the following characters:\n" + customKeyCharset)
 		}
 		isCustomLink = true
 		key = lnk.Key

@@ -22,7 +22,7 @@ const (
 	// Do not try to gzip data that is less than minSizeToGzip
 	minSizeToGzip = 128
 	// Max key length for custom links
-	MaxKeyLen = 64
+	maxKeyLen = 64
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 
 	// ImageMap is used in handlers.go to map requests to imagedata
 	ImageMap map[string][]byte
-	// TextBlobs is a temporary map untill saving to DB is implemented
+	// TextBlobs is a temporary map until saving to DB is implemented
 	TextBlobs map[string][]byte
 	// BackupLinkLen is used to repopulate the database after loading backuped data from a file
 	BackupLinkLen1 []Link

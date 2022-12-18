@@ -3,7 +3,7 @@
 DomainNames:
   - "127.0.0.1:8080"
   - "localhost:8080"
-# AddressPort specifies the adress and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
+# AddressPort specifies the address and port the shorter service should listen to unencrypted port 80 requests from letsencrypt, all requests besides ACME "http-01" challenge responses are redirected to https.
 AddressPort: "127.0.0.1:8080"
 # Time before Clearing next batch of old shortened URLs/texts/files for URLs with the length of 1 characters
 Clear1Duration: "10m"
@@ -39,7 +39,7 @@ Logging: true
 # LogSep: "XXXXXXXXXXXXXXXX"
 LogSep: "set LogSep to a random value, suggested 16 random characters from charset a-z A-Z 0-9"
 
-## TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
+## TLSAddressPort specifies the address and port the shorter service should listen to HTTPS connections on
 #TLSAddressPort: "127.0.0.1:10443"
 
 ## BaseDir specifies the path to the template directory for the shorter service

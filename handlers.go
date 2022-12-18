@@ -77,21 +77,17 @@ func handleRequests(w http.ResponseWriter, r *http.Request) {
 
 		// Get how many times the link can be used before becoming invalid, -1 represents no limit
 		xTimes, err := strconv.Atoi(r.Form.Get("xTimes"))
-		if err != nil {
+		if err != nil || xTimes < 1 {
 			xTimes = -1
-		} else {
-			if xTimes < 1 {
-				xTimes = -1
-			} else if xTimes > config.LinkAccessMaxNr {
-				xTimes = config.LinkAccessMaxNr
-			}
+		} else if xTimes > config.LinkAccessMaxNr {
+			xTimes = config.LinkAccessMaxNr
 		}
 
 		// Check if request is a custom key request and report error if it is invalid
 		customKey := ""
 		if length == "custom" {
 			customKey = r.Form.Get("custom")
-			if !validate(customKey) || len(customKey) < 4 || len(customKey) > MaxKeyLen {
+			if !validate(customKey) || len(customKey) < 4 || len(customKey) > maxKeyLen {
 				logErrors(w, r, errInvalidCustomKey, http.StatusInternalServerError, "")
 				return
 			}
@@ -289,7 +285,7 @@ func handleGET(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		domainLinkLens[r.Host].LinkLen3.Mutex.RUnlock()
-	case keylen > 3 && keylen < MaxKeyLen:
+	case keylen > 3 && keylen < maxKeyLen:
 		// key is validated previously
 		domainLinkLens[r.Host].LinkCustom.Mutex.RLock()
 		if lnk, ok = domainLinkLens[r.Host].LinkCustom.LinkMap[key]; !ok {
@@ -470,7 +466,7 @@ func quickAddURL(w http.ResponseWriter, r *http.Request, url, key string) {
 	var urlLink *LinkLen
 
 	// Remove keys of invalid size, note that key has been validated to only contain valid characters previously
-	if len(key) <= 3 || len(key) >= MaxKeyLen {
+	if len(key) <= 3 || len(key) >= maxKeyLen {
 		key = ""
 	}
 
