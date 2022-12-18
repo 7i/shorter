@@ -10,8 +10,8 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-// getAuroCertTLSConf is used if UseLetsEncrypt is set to true.
-// Note that a CertDir must be specified in the config if UseLetsEncrypt is set to true
+// getAuroCertTLSConf is used if NoTLS is set to false.
+// Note that a CertDir must be specified in the config if NoTLS is set to false
 func getServer(mux *http.ServeMux) (server *http.Server) {
 	var certdir string
 	if config.CertDir != "" {

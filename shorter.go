@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/kr/pretty"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -54,6 +58,18 @@ func main() {
 	}
 
 	if config.Logging {
+		// logSep is set to a 128bit random string together with the configured config.LogSep string that is used as a log entry separator
+		randomSep := make([]byte, 8)
+		n, err := rand.Read(randomSep)
+		if n != 8 || err != nil {
+			time.Sleep(2 * time.Second)
+			n, err = rand.Read(randomSep)
+			if n != 8 || err != nil {
+				log.Fatalln("Faild to initiate random separator")
+			}
+		}
+		logSep = "[" + hex.EncodeToString(randomSep) + "-" + config.LogSep + "]"
+
 		var f *os.File
 		if config.Logfile != "" {
 			f, err = os.OpenFile(config.Logfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -63,46 +79,44 @@ func main() {
 		if err != nil {
 			log.Println(err)
 			logger = nil
+		} else {
+			defer f.Close()
+			// Write out server config on startup if logging is enabled
+			f.WriteString("Loaded config:\n" + fmt.Sprintf("%# v", pretty.Formatter(config)) + "\nLog Separator: " + logSep + "\n")
+			logger = log.New(f, logSep+"\n", log.LstdFlags)
 		}
-		defer f.Close()
-		logger = log.New(f, "shorter ", log.LstdFlags)
-	}
-
-	// Set up DB file so we can resume state if server goes down
-	//setupDB() // defined in db.go
-
-	// Write out server config on startup if logging is enabled
-	if logger != nil {
-		logger.Println("config:\n", config, logSep)
 	}
 
 	// init linkLen1, linkLen2, linkLen3 and fill each freeMap with all valid keys for each len. Defined in misc.go
 	initLinkLens()
 
-	// Start TimeoutManager for all key lengths. Defined in types.go
-	go linkLen1.TimeoutManager()
-	go linkLen2.TimeoutManager()
-	go linkLen3.TimeoutManager()
 	// TODO: find better solution, maybe waitgroup so all TimeoutManager have started before starting the server
-	time.Sleep(time.Millisecond * 200)
+	time.Sleep(time.Millisecond * 500)
+
+	setupDB()
+	go BackupRoutine()
+
+	// TODO: find better solution, maybe waitgroup
+	time.Sleep(time.Millisecond * 500)
+
+	initTemplates()
 
 	mux := http.NewServeMux()
 
-	// Handle requests to /sjcl.js
 	handleCSS(mux)    // defined in handlers.go
-	handleJS(mux)     // defined in handlers.go
 	handleImages(mux) // defined in handlers.go
 	handleRobots(mux) // defined in handlers.go
 	handleRoot(mux)   // defined in handlers.go
+
 	// Start server
 	if logger != nil {
-		logger.Println("Starting server", logSep)
+		logger.Println("Starting server")
 	}
 	// if NoTLS is set only start a http server
 	if config.NoTLS {
 		log.Fatalln(http.ListenAndServe(config.AddressPort, mux))
 	}
 	server := getServer(mux) // defined in letsencrypt.go
-	// Using LetsEncrypt, no premade cert and keyfiles needed
+	// Using LetsEncrypt, no premade cert and key files needed
 	log.Fatalln(server.ListenAndServeTLS("", ""))
 }

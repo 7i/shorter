@@ -23,41 +23,54 @@ MaxRAM: 1000000000 # 1GB
 LinkAccessMaxNr: 100000
 # MaxCustomLinks, sets the maximum number of active CustomLinks before reporting that all are used up
 MaxCustomLinks: 100000
-
-## OPTIONAL Parameters
-
-## BaseDir specifies the path to the template directory for the shorter service
-#BaseDir: "/path/to/template/directory"
-
-
 # NoTLS specifies if we should inactivate TLS and only use unencrypted HTTP
 #default true to make it easier to test the setup before going in to production
 NoTLS: true
+## Logging specifies if shorter should write debug data and requests to a log file, if false no logging will be done
+Logging: true
+
+## OPTIONAL Parameters
+
+## Logfile specifies the file to write logs to
+## If Logfile is not specified BaseDir/shorter.log is used
+#Logfile: "/path/to/logfile"
+
+# LogSep is a secret log separator value to make it harder to forge log entry's
+# LogSep: "XXXXXXXXXXXXXXXX"
+LogSep: "set LogSep to a random value, suggested 16 random characters from charset a-z A-Z 0-9"
 
 ## TLSAddressPort specifies the adress and port the shorter service should listen to HTTPS connections on
 #TLSAddressPort: "127.0.0.1:10443"
+
+## BaseDir specifies the path to the template directory for the shorter service
+#BaseDir: "/path/to/template/directory"
 
 ## Email optionally specifies a contact email address.
 ## This is used by CAs, such as Let's Encrypt, to notify about problems with issued certificates.
 ## If the Client's account key is already registered, Email is not used.
 #Email: "email@example.com"
 
-## UploadDir specifies the path to the directory that shorter will save temporary files and textblobs to
-## If UploadDir is not specified BaseDir/Uploads is used
-#UploadDir: "/path/to/upload/directory"
-
-## BackupDBDir specifies the path to the directory that shorter will use to save its database file "shorter.db"
-## If BackupDBDir is not specified BaseDir/BackupDB is used
-#BackupDBDir: "/path/to/backup/directory"
-
 ## CertDir specifies the path to the directory that shorter will use to cache the LetsEnctypt certs
 ## If CertDir is not specified BaseDir is used.
 ## Note that acme/autocert will create a acme directory in the specified path and save all certs in this directory.
 #CertDir: "/path/to/cert/directory"
 
-## Logging specifies if shorter should write debug data and requests to a log file, if false no logging will be done
-Logging: true
-
-## Logfile specifies the file to write logs to
-## If Logfile is not specified BaseDir/shorter.log is used
-#Logfile: "/path/to/logfile"
+# Salt is used as the Salt for the password for special requests
+Salt: "set salt to a random value, suggested 16 random characters"
+# HashSHA256 is the sha256 hash of the password and Salt used for special requests
+HashSHA256: "set this to the SHA256 hash of Password + Salt (sha256.Sum256([]byte(password + salt)))"
+# CSP controls if a Content-Security-Policy should be included in all requests to shorter,
+# if not set no Content-Security-Policy header is used.
+# The string ###DomainNames### is a search and replace string that will be replaced with
+# the Host name of the request if it matches one of the configured DomainNames
+CSP: "default-src 'none'; img-src 'self' data:; style-src http://###DomainNames###/shorter.css; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; report-uri http://###DomainNames###/csp/; report-to a;"
+# HSTS controls if a Strict-Transport-Security header should be included in all requests
+# to shorter. Can only be used if NoTLS is set to false. If not set then no
+# Strict-Transport-Security header will be included
+HSTS: "max-age=63072000; includeSubDomains"
+# ReportTo controls if a Report-To header should be included in all requests to shorter,
+# if not set no Report-To header is used
+ReportTo: "{ 'group': 'a','max_age': 10886400,'endpoints': [{ 'url': 'http://###DomainNames###/csp/' }] }"
+# StaticLinks contains a list of static keys that will not time out
+StaticLinks:
+  "cox": "https://www.youtube.com/watch?v=KFVdHDMcepw&list=PLJicmE8fK0EgogMqDYMgcADT1j5b911or"

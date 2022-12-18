@@ -54,6 +54,7 @@ body {
 #shortener, .info {
     padding: 2em;
 }
+
 @media (max-width: 767px) {
     .content {
         margin: 1em auto;
@@ -80,6 +81,7 @@ body {
     gap: 1em;
     align-items: center;
 }
+
 
 input[type=text],
 select {
@@ -127,7 +129,6 @@ input[type="file"] {
     display: none;
 }
 
-
 #urlDiv,
 #fileDiv,
 #textDiv {
@@ -155,3 +156,26 @@ input[id="showFile"]:checked ~ #fileDiv {
 input[id="showCustomKey"]:checked ~ #customDiv {
     display: grid;
 }
+
+
+
+
+input[type="checkbox"] {
+    display: none;
+}
+
+.tos {
+    padding: 2em;
+}
+
+#ToSDiv {
+    padding: 2em;
+    padding-top: 0em;
+    margin: 1em 0;
+    display: none;
+}
+
+input[id="ToS"]:checked~#ToSDiv {
+    display: grid;
+}
+

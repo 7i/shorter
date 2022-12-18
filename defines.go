@@ -1,9 +1,8 @@
 package main
 
 import (
+	"html/template"
 	"log"
-
-	"github.com/boltdb/bolt"
 )
 
 const (
@@ -13,10 +12,6 @@ const (
 	customKeyCharset = "abcdefghijklmnopqrstuvwxyzåäö0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ-_"
 	// dateFormat specifies the format in which date and time is represented.
 	dateFormat = "Mon 2006-01-02 15:04 MST"
-	// logSep sets the separator between log entrys in the log file, only used for aesthetics purposes.
-	// do not rely on this if doing log parsing.
-	// TODO, add secure log entrys (generate seperator from sha256(key+time+lognr) and/or header for all entrys with lenght specified and/or signed log entrys so we can verify all entrys.)
-	logSep = "\n---\n"
 	// errServerError contains the generic error message users will se when somthing goes wrong
 	errServerError      = "Internal Server Error"
 	errInvalidKey       = "Invalid key"
@@ -31,19 +26,24 @@ const (
 )
 
 var (
+	// logSep is a 128bit random number together with a configured log separator string to make it harder to forge log entry's
+	logSep string
 	// Server config variable
 	config Config
 	// linkLen1, linkLen2 and linkLen3 will contain all data related to their respective key length and linkCustom will contain all data related to custom keys.
-	linkLen1   linkLen
-	linkLen2   linkLen
-	linkLen3   linkLen
-	linkCustom linkLen
+	domainLinkLens map[string]*LinkLens
 	// If we want to log errors logger will write these to a file specified in the config
 	logger *log.Logger
-	//
-	db *bolt.DB
+
 	// ImageMap is used in handlers.go to map requests to imagedata
 	ImageMap map[string][]byte
 	// TextBlobs is a temporary map untill saving to DB is implemented
 	TextBlobs map[string][]byte
+	// BackupLinkLen is used to repopulate the database after loading backuped data from a file
+	BackupLinkLen1 []Link
+	BackupLinkLen2 []Link
+	BackupLinkLen3 []Link
+	BackupLinkLenC []Link
+
+	templateMap map[string]*template.Template
 )
